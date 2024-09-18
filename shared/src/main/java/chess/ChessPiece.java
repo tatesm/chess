@@ -90,7 +90,19 @@ public class ChessPiece {
             for (int[] direction : directions) {
                 int newRow = currentRow + direction[0];
                 int newCol = currentColumn + direction[1];
+                if (newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7) {
+                    /*ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+                    if (pieceAtNewPosition == null || pieceAtNewPosition.getTeamColor() != this.pieceColor){
+
+                    }*/
+                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                    possibleMoves.add(new ChessMove(myPosition, newPosition, null));
+
+
+                }
             }
+            return possibleMoves;
         }
     }
 /**
