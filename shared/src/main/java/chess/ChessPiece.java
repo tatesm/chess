@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -13,7 +14,7 @@ public class ChessPiece {
     private ChessGame.TeamColor pieceColor;
     private PieceType type;
 
-    public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
+    public ChessPiece(ChessGame.TeamColor pieceColor, PieceType type) {
         this.pieceColor = pieceColor; // Store the color
         this.type = type;             // Store the type
     }
@@ -53,62 +54,84 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         PieceMovesCalculator calculator;
-        switch (this.type){
+        switch (this.type) {
             case KING -> calculator = new KingMovesCalculator();
-            case QUEEN -> calculator = new QueenMovesCalculator();
-            case PAWN -> calculator = new PawnMovesCalculator();
-            case BISHOP -> calculator = new BishopMovesCalculator();
-            case ROOK ->  calculator = new RookMovesCalculator();
-            case KNIGHT ->  calculator = new KnightMovesCalculator();
+            //case QUEEN -> calculator = new QueenMovesCalculator();
+            //case PAWN -> calculator = new PawnMovesCalculator();
+            //case BISHOP -> calculator = new BishopMovesCalculator();
+            //case ROOK -> calculator = new RookMovesCalculator();
+            //case KNIGHT -> calculator = new KnightMovesCalculator();
+            default -> throw new IllegalStateException("Unexpected value: " + this.type);
         }
+        return calculator.pieceMoves(board, myPosition);
     }
 
     public interface PieceMovesCalculator {
         Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition);
     }
+
     public class KingMovesCalculator implements PieceMovesCalculator {
-
         @Override
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+            List<ChessMove> possibleMoves = new ArrayList<>();
+            int[][] directions = {
+                    {1, 0},   // Up
+                    {-1, 0},  // Down
+                    {0, 1},   // Right
+                    {0, -1},  // Left
+                    {1, 1},   // Up-Right
+                    {1, -1},  // Up-Left
+                    {-1, 1},  // Down-Right
+                    {-1, -1}  // Down-Left
+            };
+            possibleMoves = directions;
+            int currentRow = myPosition.getRow();
+            int currentColumn = myPosition.getColumn();
+
+// Move the King "up" by incrementing the row
+            int newRow = currentRow + 1;  // Moving up means increasing the row
+            int newColumn = currentColumn;  // Column stays the same
+
 
         }
     }
-    public class QueenMovesCalculator implements PieceMovesCalculator {
+/**
+ public class QueenMovesCalculator implements PieceMovesCalculator {
 
-        @Override
-        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+@Override public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
 
-        }
-    }
-    public class KnightMovesCalculator implements PieceMovesCalculator {
+}
+}
 
-        @Override
-        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-            return List.of();
-        }
-    }
-    public class BishopMovesCalculator implements PieceMovesCalculator {
+ public class KnightMovesCalculator implements PieceMovesCalculator {
 
-        @Override
-        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-            return List.of();
+@Override public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+return List.of();
+}
+}
 
-        }
-    }
-    public class PawnMovesCalculator implements PieceMovesCalculator {
+ public class BishopMovesCalculator implements PieceMovesCalculator {
 
-        @Override
-        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-            return List.of();
+@Override public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+return List.of();
 
-        }
-    }
-    public class RookMovesCalculator implements PieceMovesCalculator {
+}
+}
 
-        @Override
-        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-            return List.of();
+ public class PawnMovesCalculator implements PieceMovesCalculator {
 
-        }
-    }
+@Override public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+return List.of();
+
+}
+}
+
+ public class RookMovesCalculator implements PieceMovesCalculator {
+
+@Override public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+return List.of();
+
+}
+}*/
+}
 
