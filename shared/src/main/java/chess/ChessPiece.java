@@ -84,15 +84,13 @@ public class ChessPiece {
                     {-1, 1},  // Down-Right
                     {-1, -1}  // Down-Left
             };
-            possibleMoves = directions;
             int currentRow = myPosition.getRow();
             int currentColumn = myPosition.getColumn();
 
-// Move the King "up" by incrementing the row
-            int newRow = currentRow + 1;  // Moving up means increasing the row
-            int newColumn = currentColumn;  // Column stays the same
-
-
+            for (int[] direction : directions) {
+                int newRow = currentRow + direction[0];
+                int newCol = currentColumn + direction[1];
+            }
         }
     }
 /**
