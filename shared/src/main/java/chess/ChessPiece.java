@@ -1,6 +1,5 @@
 package chess;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -53,7 +52,15 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        return new ArrayList<>();
+        PieceMovesCalculator calculator;
+        switch (this.type){
+            case KING -> calculator = new KingMovesCalculator();
+            case QUEEN -> calculator = new QueenMovesCalculator();
+            case PAWN -> calculator = new PawnMovesCalculator();
+            case BISHOP -> calculator = new BishopMovesCalculator();
+            case ROOK ->  calculator = new RookMovesCalculator();
+            case KNIGHT ->  calculator = new KnightMovesCalculator();
+        }
     }
 
     public interface PieceMovesCalculator {
@@ -73,7 +80,7 @@ public class ChessPiece {
 
         }
     }
-    public class KinghtMovesCalculator implements PieceMovesCalculator {
+    public class KnightMovesCalculator implements PieceMovesCalculator {
 
         @Override
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
