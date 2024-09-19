@@ -245,16 +245,26 @@ public class ChessPiece {
                     if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
                         ChessPosition newPosition = new ChessPosition(newRow, newCol);
                         ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+
                         if (direction[1] == 0 && pieceAtNewPosition == null) {
-                            possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
+                            if (newRow == 8) {
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, ChessPiece.this.getPieceType()));
+                            } else {
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
+                            }
                         }
-                        if (direction[1] != 0 && pieceAtNewPosition != null && pieceAtNewPosition.getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                            possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
-                            // Diagonal Logic
+                        //Diagonal Moves logic
+                        if (direction[1] != 0 && pieceAtNewPosition != null && pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
+                            if (newRow == 8) {
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, ChessPiece.this.getPieceType()));
+                            } else {
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
+                            }
+
                         }
                     }
                 }
-                if (currentRow == 2) {
+                if (currentRow == 2) { //Double move for white pieces
                     int newRow = currentRow + 2;
                     int newCol = currentColumn;
                     ChessPosition newPosition = new ChessPosition(newRow, newCol);
@@ -282,11 +292,19 @@ public class ChessPiece {
                         ChessPosition newPosition = new ChessPosition(newRow, newCol);
                         ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
                         if (direction[1] == 0 && pieceAtNewPosition == null) { // If the direction is straight down (not diagonal) and the square is empty, add the move
-                            possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
+                            if (newRow == 1) {
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, ChessPiece.this.getPieceType()));
+                            } else {
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
+                            }
                         }
                         // If the direction is diagonal and there is an opponent's piece at the new position, capture it
-                        if (direction[1] != 0 && pieceAtNewPosition != null && pieceAtNewPosition.getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                            possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
+                        if (direction[1] != 0 && pieceAtNewPosition != null && pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
+                            if (newRow == 1) {
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, ChessPiece.this.getPieceType()));
+                            } else {
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
+                            }
 
                         }
                     }
