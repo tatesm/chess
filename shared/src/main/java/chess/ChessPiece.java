@@ -59,7 +59,7 @@ public class ChessPiece {
             case QUEEN -> calculator = new QueenMovesCalculator();
             //case PAWN -> calculator = new PawnMovesCalculator();
             case BISHOP -> calculator = new BishopMovesCalculator();
-            //case ROOK -> calculator = new RookMovesCalculator();
+            case ROOK -> calculator = new RookMovesCalculator();
             case KNIGHT -> calculator = new KnightMovesCalculator();
             default -> throw new IllegalStateException("Unexpected value: " + this.type);
         }
@@ -225,11 +225,39 @@ public class ChessPiece {
     }
 
     public class PawnMovesCalculator implements PieceMovesCalculator {
-
         @Override
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-            return List.of();
+            List<ChessMove> possibleMoves_pawn = new ArrayList<>();
+            if (ChessPiece.this.getTeamColor() == ChessGame.TeamColor.WHITE) {
+                List<ChessMove> possibleMoves_Wpawn = new ArrayList<>();
+                int[][] directions = {
+                        {1, 0}//, //
+                        //{-1,0}  // Down
+                        //{1, 1},   // Up-Right
+                        //{1, -1},   // Up-Right
 
+                };
+                int currentRow = myPosition.getRow();
+                int currentColumn = myPosition.getColumn();
+                if(currentRow)
+
+
+                for (int[] direction : directions) {
+                    int newRow = currentRow + direction[0];
+                    int newCol = currentColumn + direction[1];
+                    if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                        ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                        ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+                        if () {
+                            possibleMoves_Wpawn.add(new ChessMove(myPosition, newPosition, null));
+                        }
+                    }
+                }
+                return possibleMoves_Wpawn;
+            }
+            if (ChessPiece.this.getTeamColor() == ChessGame.TeamColor.BLACK) {
+              // 12 possible moves if ; if at end of board ChessPiece.PieceType promotion = ChessPiece.PieceType.get
+            }
         }
     }
 
@@ -237,8 +265,42 @@ public class ChessPiece {
 
         @Override
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-            return List.of();
+            List<ChessMove> possibleMoves_rook = new ArrayList<>();
+            int[][] directions = {
+                    {1, 0},   // Up
+                    {-1, 0},  // Down
+                    {0, 1},   // Right
+                    {0, -1},  // Left
+            };
+            int currentRow = myPosition.getRow();
+            int currentColumn = myPosition.getColumn();
 
+            for (int[] direction : directions) {
+                int newRow = currentRow;
+                int newCol = currentColumn;
+                while (true) {
+                    newRow += direction[0];
+                    newCol += direction[1];
+
+                    if (newRow < 1 || newRow > 8 || newCol < 1 || newCol > 8) {
+                        break;
+                    }
+
+                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+                    if (pieceAtNewPosition == null) {
+                        possibleMoves_rook.add(new ChessMove(myPosition, newPosition, null));
+                    } else {
+                        if (pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
+                            possibleMoves_rook.add(new ChessMove(myPosition, newPosition, null));
+
+                            break;
+                        }
+                        break;
+                    }
+                }
+            }
+            return possibleMoves_rook;
         }
     }
 }
