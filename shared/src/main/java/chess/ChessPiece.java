@@ -231,32 +231,44 @@ public class ChessPiece {
             if (ChessPiece.this.getTeamColor() == ChessGame.TeamColor.WHITE) {
                 List<ChessMove> possibleMoves_Wpawn = new ArrayList<>();
                 int[][] directions = {
-                        {1, 0}//, //
-                        //{-1,0}  // Down
-                        //{1, 1},   // Up-Right
-                        //{1, -1},   // Up-Right
-
+                        {1, 0}, // Up
+                        {1, 1},   // Up-Right
+                        {1, -1},  // Up-Left
+                        {2, 0} //double forward
                 };
                 int currentRow = myPosition.getRow();
                 int currentColumn = myPosition.getColumn();
-                if(currentRow)
-
-
                 for (int[] direction : directions) {
                     int newRow = currentRow + direction[0];
                     int newCol = currentColumn + direction[1];
-                    if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
-                        ChessPosition newPosition = new ChessPosition(newRow, newCol);
-                        ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
-                        if () {
+                    if (currentRow != 2) {
+                        if (currentRow != 8) {
+                            if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                                ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                                ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+                                if (pieceAtNewPosition == null || pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
+                                    possibleMoves_Wpawn.add(new ChessMove(myPosition, newPosition, null));
+                                }
+                            }
+                        }
+                    } else {
+                        int[][] directions_doub = {
+                                {2, 0} //double forward
+                        };
+                        int currentRow_2 = myPosition.getRow();
+                        int currentColumn_2 = myPosition.getColumn();
+                        for (int[] direction2 : directions_doub) {
+                            int newRow2 = currentRow + direction2[0];
+                            int newCol2 = currentColumn + direction2[1];
+                            ChessPosition newPosition = new ChessPosition(newRow2, newCol2);
+                            ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
                             possibleMoves_Wpawn.add(new ChessMove(myPosition, newPosition, null));
                         }
                     }
+
                 }
-                return possibleMoves_Wpawn;
-            }
-            if (ChessPiece.this.getTeamColor() == ChessGame.TeamColor.BLACK) {
-              // 12 possible moves if ; if at end of board ChessPiece.PieceType promotion = ChessPiece.PieceType.get
+                //if (ChessPiece.this.getTeamColor() == ChessGame.TeamColor.BLACK) {
+                return possibleMoves_Wpawn; // 12 possible moves if ; if at end of board ChessPiece.PieceType promotion = ChessPiece.PieceType.get
             }
         }
     }
