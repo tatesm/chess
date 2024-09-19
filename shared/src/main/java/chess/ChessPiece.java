@@ -73,7 +73,7 @@ public class ChessPiece {
     public class KingMovesCalculator implements PieceMovesCalculator {
         @Override
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-            List<ChessMove> possibleMoves = new ArrayList<>();
+            List<ChessMove> possibleMoves_king = new ArrayList<>();
             int[][] directions = {
                     {1, 0},   // Up
                     {-1, 0},  // Down
@@ -94,50 +94,87 @@ public class ChessPiece {
                     ChessPosition newPosition = new ChessPosition(newRow, newCol);
                     ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
                     if (pieceAtNewPosition == null || pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
-                        possibleMoves.add(new ChessMove(myPosition, newPosition, null));
+                        possibleMoves_king.add(new ChessMove(myPosition, newPosition, null));
                     }
                 }
             }
-            return possibleMoves;
+            return possibleMoves_king;
         }
     }
-/**
- public class QueenMovesCalculator implements PieceMovesCalculator {
 
-@Override public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+    public class QueenMovesCalculator implements PieceMovesCalculator {
+        @Override
+        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+            List<ChessMove> possibleMoves_queen = new ArrayList<>();
+            int[][] directions = {
+                    {1, 0},   // Up
+                    {-1, 0},  // Down
+                    {0, 1},   // Right
+                    {0, -1},  // Left
+                    {1, 1},   // Up-Right
+                    {1, -1},  // Up-Left
+                    {-1, 1},  // Down-Right
+                    {-1, -1}  // Down-Left
+            };
+            int currentRow = myPosition.getRow();
+            int currentColumn = myPosition.getColumn();
 
-}
-}
+            for (int[] direction : directions) {
+                int newRow = currentRow;
+                int newCol = currentColumn;
+                while (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                    newRow += direction[0];
+                    newCol += direction[1];
 
- public class KnightMovesCalculator implements PieceMovesCalculator {
+                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+                    if (pieceAtNewPosition == null) {
+                        possibleMoves_queen.add(new ChessMove(myPosition, newPosition, null));
+                    } else {
+                        if (pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
+                            possibleMoves_queen.add(new ChessMove(myPosition, newPosition, null));
+                            possibleMoves_queen.add(new ChessMove(myPosition, newPosition, null));
+                        }
+                    }
+                }
+            }
+            return possibleMoves_queen;
+        }
+    }
 
-@Override public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-return List.of();
-}
-}
+    public class KnightMovesCalculator implements PieceMovesCalculator {
 
- public class BishopMovesCalculator implements PieceMovesCalculator {
+        @Override
+        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+            return List.of();
+        }
+    }
 
-@Override public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-return List.of();
+    public class BishopMovesCalculator implements PieceMovesCalculator {
 
-}
-}
+        @Override
+        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+            return List.of();
 
- public class PawnMovesCalculator implements PieceMovesCalculator {
+        }
+    }
 
-@Override public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-return List.of();
+    public class PawnMovesCalculator implements PieceMovesCalculator {
 
-}
-}
+        @Override
+        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+            return List.of();
 
- public class RookMovesCalculator implements PieceMovesCalculator {
+        }
+    }
 
-@Override public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-return List.of();
+    public class RookMovesCalculator implements PieceMovesCalculator {
 
-}
-}*/
+        @Override
+        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+            return List.of();
+
+        }
+    }
 }
 
