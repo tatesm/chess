@@ -60,7 +60,7 @@ public class ChessPiece {
             //case PAWN -> calculator = new PawnMovesCalculator();
             //case BISHOP -> calculator = new BishopMovesCalculator();
             //case ROOK -> calculator = new RookMovesCalculator();
-            //case KNIGHT -> calculator = new KnightMovesCalculator();
+            case KNIGHT -> calculator = new KnightMovesCalculator();
             default -> throw new IllegalStateException("Unexpected value: " + this.type);
         }
         return calculator.pieceMoves(board, myPosition);
@@ -137,7 +137,7 @@ public class ChessPiece {
                     } else {
                         if (pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
                             possibleMoves_queen.add(new ChessMove(myPosition, newPosition, null));
-                            possibleMoves_queen.add(new ChessMove(myPosition, newPosition, null));
+
                             break;
                         }
                         break;
@@ -149,7 +149,6 @@ public class ChessPiece {
     }
 
     public class KnightMovesCalculator implements PieceMovesCalculator {
-
         @Override
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
             List<ChessMove> possibleMoves_knight = new ArrayList<>();
@@ -167,33 +166,20 @@ public class ChessPiece {
             int currentColumn = myPosition.getColumn();
 
             for (int[] direction : directions) {
-                int newRow = currentRow;
-                int newCol = currentColumn;
-                while (true) {
-                    newRow += direction[0];
-                    newCol += direction[1];
-
-                    if (newRow < 1 || newRow > 8 || newCol < 1 || newCol > 8) {
-                        break;
-                    }
-
+                int newRow = currentRow + direction[0];
+                int newCol = currentColumn + direction[1];
+                if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
                     ChessPosition newPosition = new ChessPosition(newRow, newCol);
                     ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
-                    if (pieceAtNewPosition == null) {
+                    if (pieceAtNewPosition == null || pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
                         possibleMoves_knight.add(new ChessMove(myPosition, newPosition, null));
-                    } else {
-                        if (pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
-                            possibleMoves_knight.add(new ChessMove(myPosition, newPosition, null));
-                            possibleMoves_knight.add(new ChessMove(myPosition, newPosition, null));
-                            break;
-                        }
-                        break;
                     }
                 }
             }
             return possibleMoves_knight;
         }
     }
+
 
     public class BishopMovesCalculator implements PieceMovesCalculator {
 
