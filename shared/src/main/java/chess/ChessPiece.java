@@ -234,44 +234,45 @@ public class ChessPiece {
                         {1, 0}, // Up
                         {1, 1},   // Up-Right
                         {1, -1},  // Up-Left
-                        {2, 0} //double forward
                 };
                 int currentRow = myPosition.getRow();
                 int currentColumn = myPosition.getColumn();
+
+                //Reg forward and capture pieces
                 for (int[] direction : directions) {
                     int newRow = currentRow + direction[0];
                     int newCol = currentColumn + direction[1];
-                    if (currentRow != 2) {
-                        if (currentRow != 8) {
-                            if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
-                                ChessPosition newPosition = new ChessPosition(newRow, newCol);
-                                ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
-                                if (pieceAtNewPosition == null || pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
-                                    possibleMoves_Wpawn.add(new ChessMove(myPosition, newPosition, null));
-                                }
-                            }
+
+                    if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                        ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                        ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+                        if (direction[1] == 0 && pieceAtNewPosition == null) {
+                            possibleMoves_Wpawn.add(new ChessMove(myPosition, newPosition, null));
                         }
-                    } else {
-                        int[][] directions_doub = {
-                                {2, 0} //double forward
-                        };
-                        int currentRow_2 = myPosition.getRow();
-                        int currentColumn_2 = myPosition.getColumn();
-                        for (int[] direction2 : directions_doub) {
-                            int newRow2 = currentRow + direction2[0];
-                            int newCol2 = currentColumn + direction2[1];
-                            ChessPosition newPosition = new ChessPosition(newRow2, newCol2);
-                            ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+                        if (direction[1] != 0 && pieceAtNewPosition != null && pieceAtNewPosition.getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
+                            possibleMoves_Wpawn.add(new ChessMove(myPosition, newPosition, null));
+                        }
+                        if (pieceAtNewPosition == null || pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
                             possibleMoves_Wpawn.add(new ChessMove(myPosition, newPosition, null));
                         }
                     }
+                }
+                if (currentRow == 2) {
+                    int newRow = currentRow +2;
+                    int newCol = currentColumn;
+                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+                    possibleMoves_Wpawn.add(new ChessMove(myPosition, newPosition, null));
+
 
                 }
-                //if (ChessPiece.this.getTeamColor() == ChessGame.TeamColor.BLACK) {
-                return possibleMoves_Wpawn; // 12 possible moves if ; if at end of board ChessPiece.PieceType promotion = ChessPiece.PieceType.get
+
             }
+            //if (ChessPiece.this.getTeamColor() == ChessGame.TeamColor.BLACK) {
+            return possibleMoves_Wpawn; // 12 possible moves if ; if at end of board ChessPiece.PieceType promotion = ChessPiece.PieceType.get
         }
     }
+}
 
     public class RookMovesCalculator implements PieceMovesCalculator {
 
