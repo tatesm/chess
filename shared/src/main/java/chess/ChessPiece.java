@@ -58,7 +58,7 @@ public class ChessPiece {
             case KING -> calculator = new KingMovesCalculator();
             case QUEEN -> calculator = new QueenMovesCalculator();
             //case PAWN -> calculator = new PawnMovesCalculator();
-            //case BISHOP -> calculator = new BishopMovesCalculator();
+            case BISHOP -> calculator = new BishopMovesCalculator();
             //case ROOK -> calculator = new RookMovesCalculator();
             case KNIGHT -> calculator = new KnightMovesCalculator();
             default -> throw new IllegalStateException("Unexpected value: " + this.type);
@@ -185,8 +185,42 @@ public class ChessPiece {
 
         @Override
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-            return List.of();
+            List<ChessMove> possibleMoves_bishop = new ArrayList<>();
+            int[][] directions = {
+                    {1, 1},   // Up-Right
+                    {1, -1},  // Up-Left
+                    {-1, 1},  // Down-Right
+                    {-1, -1}  // Down-Left
+            };
+            int currentRow = myPosition.getRow();
+            int currentColumn = myPosition.getColumn();
 
+            for (int[] direction : directions) {
+                int newRow = currentRow;
+                int newCol = currentColumn;
+                while (true) {
+                    newRow += direction[0];
+                    newCol += direction[1];
+
+                    if (newRow < 1 || newRow > 8 || newCol < 1 || newCol > 8) {
+                        break;
+                    }
+
+                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+                    if (pieceAtNewPosition == null) {
+                        possibleMoves_bishop.add(new ChessMove(myPosition, newPosition, null));
+                    } else {
+                        if (pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
+                            possibleMoves_bishop.add(new ChessMove(myPosition, newPosition, null));
+
+                            break;
+                        }
+                        break;
+                    }
+                }
+            }
+            return possibleMoves_bishop;
         }
     }
 
