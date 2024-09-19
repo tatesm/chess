@@ -229,7 +229,6 @@ public class ChessPiece {
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
             List<ChessMove> possibleMoves_pawn = new ArrayList<>();
             if (ChessPiece.this.getTeamColor() == ChessGame.TeamColor.WHITE) {
-                List<ChessMove> possibleMoves_Wpawn = new ArrayList<>();
                 int[][] directions = {
                         {1, 0}, // Up
                         {1, 1},   // Up-Right
@@ -247,32 +246,70 @@ public class ChessPiece {
                         ChessPosition newPosition = new ChessPosition(newRow, newCol);
                         ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
                         if (direction[1] == 0 && pieceAtNewPosition == null) {
-                            possibleMoves_Wpawn.add(new ChessMove(myPosition, newPosition, null));
+                            possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
                         }
                         if (direction[1] != 0 && pieceAtNewPosition != null && pieceAtNewPosition.getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                            possibleMoves_Wpawn.add(new ChessMove(myPosition, newPosition, null));
-                        }
-                        if (pieceAtNewPosition == null || pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
-                            possibleMoves_Wpawn.add(new ChessMove(myPosition, newPosition, null));
+                            possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
+                            // Diagonal Logic
                         }
                     }
                 }
                 if (currentRow == 2) {
-                    int newRow = currentRow +2;
+                    int newRow = currentRow + 2;
                     int newCol = currentColumn;
                     ChessPosition newPosition = new ChessPosition(newRow, newCol);
                     ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
-                    possibleMoves_Wpawn.add(new ChessMove(myPosition, newPosition, null));
+                    ChessPiece pieceInFront = board.getPiece(new ChessPosition(currentRow + 1, newCol));
+                    if (pieceAtNewPosition == null && pieceInFront == null) {
+                        possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
+                    }
+                }
+            } else {
+                int[][] directions = {
+                        {-1, 0}, // Down
+                        {-1, 1},   // Down-Right
+                        {-1, -1},  // Up-Left
+                };
+                int currentRow = myPosition.getRow();
+                int currentColumn = myPosition.getColumn();
 
 
+                for (int[] direction : directions) {
+                    int newRow = currentRow + direction[0];
+                    int newCol = currentColumn + direction[1];
+                    //Reg forward and capture pieces
+                    if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) { // Ensure that the new position is within the bounds of the chessboard
+                        ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                        ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+                        if (direction[1] == 0 && pieceAtNewPosition == null) { // If the direction is straight down (not diagonal) and the square is empty, add the move
+                            possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
+                        }
+                        // If the direction is diagonal and there is an opponent's piece at the new position, capture it
+                        if (direction[1] != 0 && pieceAtNewPosition != null && pieceAtNewPosition.getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
+                            possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
+                            
+                        }
+                    }
+                }
+                if (currentRow == 2) {
+                    int newRow = currentRow + 2;
+                    int newCol = currentColumn;
+                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+                    ChessPiece pieceInFront = board.getPiece(new ChessPosition(currentRow + 1, newCol));
+                    if (pieceAtNewPosition == null && pieceInFront == null) {
+                        possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
+                    }
                 }
 
             }
-            //if (ChessPiece.this.getTeamColor() == ChessGame.TeamColor.BLACK) {
-            return possibleMoves_Wpawn; // 12 possible moves if ; if at end of board ChessPiece.PieceType promotion = ChessPiece.PieceType.get
+
         }
     }
-}
+
+    //if (ChessPiece.this.getTeamColor() == ChessGame.TeamColor.BLACK) {
+    // 12 possible moves if ; if at end of board ChessPiece.PieceType promotion = ChessPiece.PieceType.get
+
 
     public class RookMovesCalculator implements PieceMovesCalculator {
 
