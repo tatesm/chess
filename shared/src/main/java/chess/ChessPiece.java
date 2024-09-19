@@ -57,7 +57,7 @@ public class ChessPiece {
         switch (this.type) {
             case KING -> calculator = new KingMovesCalculator();
             case QUEEN -> calculator = new QueenMovesCalculator();
-            //case PAWN -> calculator = new PawnMovesCalculator();
+            case PAWN -> calculator = new PawnMovesCalculator();
             case BISHOP -> calculator = new BishopMovesCalculator();
             case ROOK -> calculator = new RookMovesCalculator();
             case KNIGHT -> calculator = new KnightMovesCalculator();
@@ -287,23 +287,23 @@ public class ChessPiece {
                         // If the direction is diagonal and there is an opponent's piece at the new position, capture it
                         if (direction[1] != 0 && pieceAtNewPosition != null && pieceAtNewPosition.getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
                             possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
-                            
+
                         }
                     }
                 }
-                if (currentRow == 2) {
-                    int newRow = currentRow + 2;
+                if (currentRow == 7) { //Double move logic, for black piece
+                    int newRow = currentRow - 2;
                     int newCol = currentColumn;
                     ChessPosition newPosition = new ChessPosition(newRow, newCol);
                     ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
-                    ChessPiece pieceInFront = board.getPiece(new ChessPosition(currentRow + 1, newCol));
+                    ChessPiece pieceInFront = board.getPiece(new ChessPosition(currentRow - 1, newCol));
                     if (pieceAtNewPosition == null && pieceInFront == null) {
                         possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
                     }
                 }
 
             }
-
+            return possibleMoves_pawn;
         }
     }
 
