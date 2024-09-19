@@ -56,7 +56,7 @@ public class ChessPiece {
         PieceMovesCalculator calculator;
         switch (this.type) {
             case KING -> calculator = new KingMovesCalculator();
-            //case QUEEN -> calculator = new QueenMovesCalculator();
+            case QUEEN -> calculator = new QueenMovesCalculator();
             //case PAWN -> calculator = new PawnMovesCalculator();
             //case BISHOP -> calculator = new BishopMovesCalculator();
             //case ROOK -> calculator = new RookMovesCalculator();
@@ -122,9 +122,13 @@ public class ChessPiece {
             for (int[] direction : directions) {
                 int newRow = currentRow;
                 int newCol = currentColumn;
-                while (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                while (true) {
                     newRow += direction[0];
                     newCol += direction[1];
+
+                    if (newRow < 1 || newRow > 8 || newCol < 1 || newCol > 8) {
+                        break;
+                    }
 
                     ChessPosition newPosition = new ChessPosition(newRow, newCol);
                     ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
@@ -134,7 +138,9 @@ public class ChessPiece {
                         if (pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
                             possibleMoves_queen.add(new ChessMove(myPosition, newPosition, null));
                             possibleMoves_queen.add(new ChessMove(myPosition, newPosition, null));
+                            break;
                         }
+                        break;
                     }
                 }
             }
@@ -146,7 +152,46 @@ public class ChessPiece {
 
         @Override
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-            return List.of();
+            List<ChessMove> possibleMoves_knight = new ArrayList<>();
+            int[][] directions = {
+                    {2, 1},   // 2 Up, 1 Right
+                    {2, -1},  // 2 Up, 1 Left
+                    {-2, 1},  // 2 Down, 1 Right
+                    {-2, -1}, // 2 Down, 1 Left
+                    {1, 2},   // 1 Up, 2 Right
+                    {1, -2},  // 1 Up, 2 Left
+                    {-1, 2},  // 1 Down, 2 Right
+                    {-1, -2}  // 1 Down, 2 Left
+            };
+            int currentRow = myPosition.getRow();
+            int currentColumn = myPosition.getColumn();
+
+            for (int[] direction : directions) {
+                int newRow = currentRow;
+                int newCol = currentColumn;
+                while (true) {
+                    newRow += direction[0];
+                    newCol += direction[1];
+
+                    if (newRow < 1 || newRow > 8 || newCol < 1 || newCol > 8) {
+                        break;
+                    }
+
+                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+                    if (pieceAtNewPosition == null) {
+                        possibleMoves_knight.add(new ChessMove(myPosition, newPosition, null));
+                    } else {
+                        if (pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
+                            possibleMoves_knight.add(new ChessMove(myPosition, newPosition, null));
+                            possibleMoves_knight.add(new ChessMove(myPosition, newPosition, null));
+                            break;
+                        }
+                        break;
+                    }
+                }
+            }
+            return possibleMoves_knight;
         }
     }
 
