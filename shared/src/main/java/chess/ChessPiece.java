@@ -3,6 +3,7 @@ package chess;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a single chess piece
@@ -29,6 +30,19 @@ public class ChessPiece {
         KNIGHT,
         ROOK,
         PAWN
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChessPiece that = (ChessPiece) o;
+        return pieceColor == that.pieceColor && type == that.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pieceColor, type);
     }
 
     /**
@@ -248,7 +262,10 @@ public class ChessPiece {
 
                         if (direction[1] == 0 && pieceAtNewPosition == null) {
                             if (newRow == 8) {
-                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, ChessPiece.this.getPieceType()));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.BISHOP));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.KNIGHT));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.ROOK));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.QUEEN));
                             } else {
                                 possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
                             }
@@ -256,7 +273,10 @@ public class ChessPiece {
                         //Diagonal Moves logic
                         if (direction[1] != 0 && pieceAtNewPosition != null && pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
                             if (newRow == 8) {
-                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, ChessPiece.this.getPieceType()));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.BISHOP));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.KNIGHT));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.ROOK));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.QUEEN));
                             } else {
                                 possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
                             }
@@ -293,7 +313,10 @@ public class ChessPiece {
                         ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
                         if (direction[1] == 0 && pieceAtNewPosition == null) { // If the direction is straight down (not diagonal) and the square is empty, add the move
                             if (newRow == 1) {
-                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, ChessPiece.this.getPieceType()));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.BISHOP));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.KNIGHT));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.ROOK));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.QUEEN));
                             } else {
                                 possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
                             }
@@ -301,7 +324,10 @@ public class ChessPiece {
                         // If the direction is diagonal and there is an opponent's piece at the new position, capture it
                         if (direction[1] != 0 && pieceAtNewPosition != null && pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
                             if (newRow == 1) {
-                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, ChessPiece.this.getPieceType()));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.BISHOP));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.KNIGHT));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.ROOK));
+                                possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, PieceType.QUEEN));
                             } else {
                                 possibleMoves_pawn.add(new ChessMove(myPosition, newPosition, null));
                             }
