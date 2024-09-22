@@ -84,6 +84,46 @@ public class ChessPiece {
         Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition);
     }
 
+    public abstract class DirectionalMovesCalculator implements PieceMovesCalculator {
+
+        protected Collection<ChessMove> calculateMoves(ChessBoard board, ChessPosition myPosition, int[][] directions) {
+            List<ChessMove> possibleMoves = new ArrayList<>();
+            int currentRow = myPosition.getRow();
+            int currentColumn = myPosition.getColumn();
+
+            for (int[] direction : directions) {
+                int newRow = currentRow;
+                int newCol = currentColumn;
+
+                while (true) {
+                    newRow += direction[0];
+                    newCol += direction[1];
+
+
+                    if (newRow < 1 || newRow > 8 || newCol < 1 || newCol > 8) {
+                        break;
+                    }
+
+                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+
+
+                    if (pieceAtNewPosition == null) {
+                        possibleMoves.add(new ChessMove(myPosition, newPosition, null));
+                    } else {
+                        if (pieceAtNewPosition.getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
+                            possibleMoves.add(new ChessMove(myPosition, newPosition, null));
+                        }
+                        break; // Stop when hitting another piece
+                    }
+                }
+            }
+
+            return possibleMoves;
+        }
+    }
+
+
     public class KingMovesCalculator implements PieceMovesCalculator {
         @Override
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
@@ -116,7 +156,7 @@ public class ChessPiece {
         }
     }
 
-    public class QueenMovesCalculator implements PieceMovesCalculator {
+    public class QueenMovesCalculator extends DirectionalMovesCalculator {
         @Override
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
             List<ChessMove> possibleMoves_queen = new ArrayList<>();
@@ -130,35 +170,7 @@ public class ChessPiece {
                     {-1, 1},  // Down-Right
                     {-1, -1}  // Down-Left
             };
-            int currentRow = myPosition.getRow();
-            int currentColumn = myPosition.getColumn();
-
-            for (int[] direction : directions) {
-                int newRow = currentRow;
-                int newCol = currentColumn;
-                while (true) {
-                    newRow += direction[0];
-                    newCol += direction[1];
-
-                    if (newRow < 1 || newRow > 8 || newCol < 1 || newCol > 8) {
-                        break;
-                    }
-
-                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
-                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
-                    if (pieceAtNewPosition == null) {
-                        possibleMoves_queen.add(new ChessMove(myPosition, newPosition, null));
-                    } else {
-                        if (pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
-                            possibleMoves_queen.add(new ChessMove(myPosition, newPosition, null));
-
-                            break;
-                        }
-                        break;
-                    }
-                }
-            }
-            return possibleMoves_queen;
+            return calculateMoves(board, myPosition, directions);
         }
     }
 
@@ -194,8 +206,22 @@ public class ChessPiece {
         }
     }
 
+    public class RookMovesCalculator extends DirectionalMovesCalculator {
 
-    public class BishopMovesCalculator implements PieceMovesCalculator {
+        @Override
+        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+            List<ChessMove> possibleMoves_rook = new ArrayList<>();
+            int[][] directions = {
+                    {1, 0},   // Up
+                    {-1, 0},  // Down
+                    {0, 1},   // Right
+                    {0, -1},  // Left
+            };
+            return calculateMoves(board, myPosition, directions);
+        }
+    }
+
+    public class BishopMovesCalculator extends DirectionalMovesCalculator {
 
         @Override
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
@@ -206,35 +232,7 @@ public class ChessPiece {
                     {-1, 1},  // Down-Right
                     {-1, -1}  // Down-Left
             };
-            int currentRow = myPosition.getRow();
-            int currentColumn = myPosition.getColumn();
-
-            for (int[] direction : directions) {
-                int newRow = currentRow;
-                int newCol = currentColumn;
-                while (true) {
-                    newRow += direction[0];
-                    newCol += direction[1];
-
-                    if (newRow < 1 || newRow > 8 || newCol < 1 || newCol > 8) {
-                        break;
-                    }
-
-                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
-                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
-                    if (pieceAtNewPosition == null) {
-                        possibleMoves_bishop.add(new ChessMove(myPosition, newPosition, null));
-                    } else {
-                        if (pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
-                            possibleMoves_bishop.add(new ChessMove(myPosition, newPosition, null));
-
-                            break;
-                        }
-                        break;
-                    }
-                }
-            }
-            return possibleMoves_bishop;
+            return calculateMoves(board, myPosition, directions);
         }
     }
 
@@ -351,51 +349,6 @@ public class ChessPiece {
         }
     }
 
-    //if (ChessPiece.this.getTeamColor() == ChessGame.TeamColor.BLACK) {
-    // 12 possible moves if ; if at end of board ChessPiece.PieceType promotion = ChessPiece.PieceType.get
 
-
-    public class RookMovesCalculator implements PieceMovesCalculator {
-
-        @Override
-        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-            List<ChessMove> possibleMoves_rook = new ArrayList<>();
-            int[][] directions = {
-                    {1, 0},   // Up
-                    {-1, 0},  // Down
-                    {0, 1},   // Right
-                    {0, -1},  // Left
-            };
-            int currentRow = myPosition.getRow();
-            int currentColumn = myPosition.getColumn();
-
-            for (int[] direction : directions) {
-                int newRow = currentRow;
-                int newCol = currentColumn;
-                while (true) {
-                    newRow += direction[0];
-                    newCol += direction[1];
-
-                    if (newRow < 1 || newRow > 8 || newCol < 1 || newCol > 8) {
-                        break;
-                    }
-
-                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
-                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
-                    if (pieceAtNewPosition == null) {
-                        possibleMoves_rook.add(new ChessMove(myPosition, newPosition, null));
-                    } else {
-                        if (pieceAtNewPosition.getTeamColor() != ChessPiece.this.getTeamColor()) {
-                            possibleMoves_rook.add(new ChessMove(myPosition, newPosition, null));
-
-                            break;
-                        }
-                        break;
-                    }
-                }
-            }
-            return possibleMoves_rook;
-        }
-    }
 }
 
