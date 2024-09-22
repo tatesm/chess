@@ -236,6 +236,13 @@ public class ChessPiece {
         }
     }
 
+    private void handlePromotion(List<ChessMove> possibleMoves, ChessPosition startPosition, ChessPosition endPosition) {
+        possibleMoves.add(new ChessMove(startPosition, endPosition, PieceType.QUEEN));
+        possibleMoves.add(new ChessMove(startPosition, endPosition, PieceType.ROOK));
+        possibleMoves.add(new ChessMove(startPosition, endPosition, PieceType.BISHOP));
+        possibleMoves.add(new ChessMove(startPosition, endPosition, PieceType.KNIGHT));
+    }
+
     public class PawnMovesCalculator implements PieceMovesCalculator {
         @Override
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
