@@ -2,9 +2,6 @@ package chess;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Collection;
 
 /**
  * For a class that can manage a chess game, making moves on a board
@@ -13,7 +10,7 @@ import java.util.Collection;
  * signature of the existing methods.
  */
 public class ChessGame {
-    private ChessBoard board;            // Declare board as an instance variable
+    private ChessBoard board;
     private TeamColor currentTurn;
 
 
@@ -58,7 +55,20 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+        ChessPiece piece = board.getPiece(startPosition);
+        if (piece == null) {
+            return null;
+        }
+        Collection<ChessMove> allMoves = piece.pieceMoves(board, startPosition);
+
+        Collection<ChessMove> allowedMoves = new ArrayList<>();
+        for (ChessMove move : allMoves) {
+            if (isAllowed(move)) {
+                allowedMoves.add(move);
+            }
+        }
+
+        return allowedMoves;
     }
 
 
@@ -69,7 +79,9 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        if (allowedMoves == null) {
+            throw new InvalidMoveException("Invalid move!");
+        }
     }
 
     /**
