@@ -247,8 +247,8 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        
-        if (isInCheck(teamColor)) {
+
+        if (!isInCheck(teamColor)) {
 
             for (int row = 1; row <= 8; row++) {
                 for (int col = 1; col <= 8; col++) {
@@ -270,12 +270,14 @@ public class ChessGame {
                         }
                     }
                 }
+
             }
+        } else {
+            return false;
         }
-
-
         return true;
     }
+
 
     /**
      * Sets this game's chessboard with a given board
