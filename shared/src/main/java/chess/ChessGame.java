@@ -63,12 +63,52 @@ public class ChessGame {
 
         Collection<ChessMove> allowedMoves = new ArrayList<>();
         for (ChessMove move : allMoves) {
+            if (isAllowed(move)) {
 
-            allowedMoves.add(move);
+                allowedMoves.add(move);
+            }
 
         }
 
         return allowedMoves;
+    }
+
+    private boolean isAllowed(ChessMove move) {
+
+        ChessBoard boardCopy = new ChessBoard();
+
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition position = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(position);
+                if (piece != null) {
+                    ChessPiece newPiece = new ChessPiece(piece.getTeamColor(), piece.getPieceType());
+                    boardCopy.addPiece(position, newPiece);
+                }
+            }
+        }
+
+
+        ChessPiece pieceToMove = boardCopy.getPiece(move.getStartPosition());
+        if (pieceToMove == null) {
+            return false;
+        }
+        boardCopy.addPiece(move.getStartPosition(), null);
+        boardCopy.addPiece(move.getEndPosition(), pieceToMove);
+
+
+        ChessBoard originalBoard = this.board;
+        this.board = boardCopy;
+
+
+        ChessGame.TeamColor teamColor = pieceToMove.getTeamColor();
+        boolean isInCheck = isInCheck(teamColor);
+
+
+        this.board = originalBoard;
+
+
+        return !isInCheck;
     }
 
 
@@ -160,6 +200,7 @@ public class ChessGame {
 
         return false;
     }
+
 
     /**
      * Determines if the given team is in checkmate
