@@ -2,6 +2,7 @@ package server;
 
 import dataaccess.DataAccessException;
 import model.UserData;
+import service.ClearService;
 import service.UserService;
 import dataaccess.UserDAO;
 import spark.Spark;
@@ -17,6 +18,7 @@ public class Server {
 
         Spark.staticFiles.location("web");
         Spark.delete("/db", (req, res) -> {
+            ClearService clearService = new ClearService();
             clearService.clearDatabase();  // Assuming clearService is initialized
             res.status(200);
             return "{}";  // Return an empty JSON object
