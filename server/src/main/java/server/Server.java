@@ -208,7 +208,7 @@ public class Server {
         }
     }
 
-    class CreateGameRequest {
+    public class CreateGameRequest {
         private String gameName;
         private String playerColor;
         private String username;
@@ -226,7 +226,7 @@ public class Server {
         }
     }
 
-    class JoinGameRequest {
+    public class JoinGameRequest {
         private int gameID;
         private String playerColor;
 
@@ -239,7 +239,7 @@ public class Server {
         }
     }
 
-    class GamesResponse {
+    public class GamesResponse {
         private List<GameData> games;
 
         public GamesResponse(List<GameData> games) {

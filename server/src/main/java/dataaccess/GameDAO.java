@@ -14,7 +14,7 @@ public class GameDAO {
 
     public GameData createGame(String gameName, String username, String playerColor) {
         int gameID = nextGameId++;
-        GameData newGame = new GameData(gameID, username, null, gameName, null); // Ensure blackUsername starts as null
+        GameData newGame = new GameData(gameID, null, null, gameName, null);
         games.put(gameID, newGame);
         return newGame;
     }
