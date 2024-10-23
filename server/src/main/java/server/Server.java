@@ -14,6 +14,8 @@ import dataaccess.UserDAO;
 import spark.Spark;
 import com.google.gson.Gson;
 
+import java.util.List;
+
 public class Server {
 
     private static final Gson gson = new Gson();
@@ -33,7 +35,7 @@ public class Server {
         GameDAO gameDAO = new GameDAO();
         AuthTokenDAO authTokenDAO = AuthTokenDAO.getInstance();
         userService = new UserService(userDAO, authTokenDAO);
-        gameService = new GameService(gameDAO);
+        gameService = new GameService(gameDAO, authTokenDAO);
         clearService = new ClearService();
 
         // Register the POST /game endpoint to create a new game
@@ -48,6 +50,23 @@ public class Server {
             GameData gameData = gameService.createGame(gameName, authToken, playerColor);
             res.status(200);  // OK status
             return gson.toJson(gameData);  // Return the created game's data
+        });
+        // Register the PUT /game endpoint to join a game
+        Spark.put("/game", (req, res) -> {
+            JoinGameRequest joinGameRequest = gson.fromJson(req.body(), JoinGameRequest.class);
+            String authToken = req.headers("authorization");
+            int gameID = joinGameRequest.getGameID();
+            String playerColor = joinGameRequest.getPlayerColor();
+
+            try {
+                // Call service to join the game
+                gameService.joinGame(authToken, gameID, playerColor);
+                res.status(200);  // OK status
+                return "{}";  // Return empty JSON for success
+            } catch (DataAccessException e) {
+                res.status(400);  // Bad request if something goes wrong
+                return gson.toJson(new ErrorResponse("Error: unable to join game"));
+            }
         });
 
         // Register the DELETE /db endpoint to clear the database
@@ -73,6 +92,24 @@ public class Server {
                 return gson.toJson(new ErrorResponse("Error: bad request"));
             }
         });
+        Spark.get("/game", (req, res) -> {
+            String authToken = req.headers("authorization");
+
+            // Check if the auth token is valid
+            AuthData authData = AuthTokenDAO.getInstance().getAuth(authToken);
+            if (authData == null) {
+                res.status(401);  // Unauthorized
+                return gson.toJson(new ErrorResponse("Error: Invalid auth token"));
+            }
+
+            // Retrieve the list of games
+            List<GameData> games = gameService.listGames();
+            res.status(200);  // OK
+
+            // Return games wrapped inside an object
+            return gson.toJson(new GamesResponse(games));  // Return the wrapped games
+        });
+
 
         // Register the POST /session endpoint to log in a user
         Spark.post("/session", (req, res) -> {
@@ -131,4 +168,30 @@ public class Server {
             return username;
         }
     }
+
+    class JoinGameRequest {
+        private int gameID;
+        private String playerColor;
+
+        public int getGameID() {
+            return gameID;
+        }
+
+        public String getPlayerColor() {
+            return playerColor;
+        }
+    }
+
+    class GamesResponse {
+        private List<GameData> games;
+
+        public GamesResponse(List<GameData> games) {
+            this.games = games;
+        }
+
+        public List<GameData> getGames() {
+            return games;
+        }
+    }
 }
+

@@ -2,7 +2,9 @@ package dataaccess;
 
 import model.GameData;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class GameDAO {
@@ -30,5 +32,9 @@ public class GameDAO {
 
     public void updateGame(GameData game) {
         games.put(game.getGameID(), game);  // Update the game in the in-memory map
+    }
+
+    public List<GameData> listGames() {
+        return new ArrayList<>(games.values());  // Convert the values of the games map to an ArrayList
     }
 }
