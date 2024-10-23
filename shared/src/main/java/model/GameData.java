@@ -5,9 +5,8 @@ public class GameData {
     private String whiteUsername;
     private String blackUsername;
     private String gameName;
-    private Object chessGame;  // Placeholder for an actual ChessGame object
+    private Object chessGame;
 
-    // Constructor with five parameters
     public GameData(int gameID, String whiteUsername, String blackUsername, String gameName, Object chessGame) {
         this.gameID = gameID;
         this.whiteUsername = whiteUsername;
@@ -28,7 +27,6 @@ public class GameData {
         return blackUsername;
     }
 
-
     public String getGameName() {
         return gameName;
     }
@@ -45,3 +43,4 @@ public class GameData {
         this.blackUsername = blackUsername;
     }
 }
+

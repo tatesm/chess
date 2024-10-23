@@ -8,11 +8,11 @@ public class ClearService {
 
     private UserDAO userDAO = new UserDAO();
     private GameDAO gameDAO = new GameDAO();
-    private AuthTokenDAO authTokenDAO = AuthTokenDAO.getInstance();  // Use Singleton instance
+    private AuthTokenDAO authTokenDAO = AuthTokenDAO.getInstance();
 
     public void clearDatabase() {
         userDAO.clearUsers();
         gameDAO.clearGames();
-        authTokenDAO.clearAuthTokens();  // Use the correct instance
+        authTokenDAO.clearAuthTokens();
     }
 }

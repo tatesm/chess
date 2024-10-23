@@ -24,13 +24,9 @@ public class Server {
     private ClearService clearService;
 
     public int run(int desiredPort) {
-        // Set the port
         Spark.port(desiredPort);
-
-        // Set static file location before any route mappings
         Spark.staticFiles.location("web");
 
-        // Initialize DAOs and Services
         UserDAO userDAO = new UserDAO();
         GameDAO gameDAO = new GameDAO();
         AuthTokenDAO authTokenDAO = AuthTokenDAO.getInstance();
@@ -38,20 +34,17 @@ public class Server {
         gameService = new GameService(gameDAO, authTokenDAO);
         clearService = new ClearService();
 
-        // Register the POST /game endpoint to create a new game
         Spark.post("/game", (req, res) -> {
-            // Parse the request body
             CreateGameRequest createGameRequest = gson.fromJson(req.body(), CreateGameRequest.class);
             String gameName = createGameRequest.getGameName();
             String authToken = req.headers("authorization");
-            String playerColor = createGameRequest.getPlayerColor();  // Added playerColor
+            String playerColor = createGameRequest.getPlayerColor();
 
-            // Create the game with 3 arguments
             GameData gameData = gameService.createGame(gameName, authToken, playerColor);
-            res.status(200);  // OK status
-            return gson.toJson(gameData);  // Return the created game's data
+            res.status(200);
+            return gson.toJson(gameData);
         });
-        // Register the PUT /game endpoint to join a game
+
         Spark.put("/game", (req, res) -> {
             JoinGameRequest joinGameRequest = gson.fromJson(req.body(), JoinGameRequest.class);
             String authToken = req.headers("authorization");
@@ -59,77 +52,67 @@ public class Server {
             String playerColor = joinGameRequest.getPlayerColor();
 
             try {
-                // Call service to join the game
                 gameService.joinGame(authToken, gameID, playerColor);
-                res.status(200);  // OK status
-                return "{}";  // Return empty JSON for success
+                res.status(200);
+                return "{}";
             } catch (DataAccessException e) {
-                res.status(400);  // Bad request if something goes wrong
+                res.status(400);
                 return gson.toJson(new ErrorResponse("Error: unable to join game"));
             }
         });
 
-        // Register the DELETE /db endpoint to clear the database
         Spark.delete("/db", (req, res) -> {
-            clearService.clearDatabase();  // Assuming clearService is initialized
+            clearService.clearDatabase();
             res.status(200);
-            return "{}";  // Return an empty JSON object
+            return "{}";
         });
 
-        // Register the POST /user endpoint to register a new user
         Spark.post("/user", (req, res) -> {
-            // Parse the request body to get user data
             UserData userData = gson.fromJson(req.body(), UserData.class);
             try {
-                var authData = userService.register(userData);  // Register the user
+                var authData = userService.register(userData);
                 res.status(200);
-                return gson.toJson(authData);  // Return auth token and username
+                return gson.toJson(authData);
             } catch (DataAccessException e) {
-                res.status(403);  // If username already exists, respond with Forbidden
+                res.status(403);
                 return gson.toJson(new ErrorResponse("Error: username already taken"));
             } catch (Exception e) {
-                res.status(400);  // Handle any other bad requests
+                res.status(400);
                 return gson.toJson(new ErrorResponse("Error: bad request"));
             }
         });
+
         Spark.get("/game", (req, res) -> {
             String authToken = req.headers("authorization");
 
-            // Check if the auth token is valid
             AuthData authData = AuthTokenDAO.getInstance().getAuth(authToken);
             if (authData == null) {
-                res.status(401);  // Unauthorized
+                res.status(401);
                 return gson.toJson(new ErrorResponse("Error: Invalid auth token"));
             }
 
-            // Retrieve the list of games
             List<GameData> games = gameService.listGames();
-            res.status(200);  // OK
-
-            // Return games wrapped inside an object
-            return gson.toJson(new GamesResponse(games));  // Return the wrapped games
+            res.status(200);
+            return gson.toJson(new GamesResponse(games));
         });
 
-
-        // Register the POST /session endpoint to log in a user
         Spark.post("/session", (req, res) -> {
-            // Parse the request body to get user data
             UserData loginRequest = gson.fromJson(req.body(), UserData.class);
             try {
-                var authData = userService.login(loginRequest);  // Log in the user
+                var authData = userService.login(loginRequest);
                 res.status(200);
-                return gson.toJson(authData);  // Return auth token and username
+                return gson.toJson(authData);
             } catch (DataAccessException e) {
-                res.status(401);  // Unauthorized access if credentials are wrong
+                res.status(401);
                 return gson.toJson(new ErrorResponse("Error: invalid credentials"));
             } catch (Exception e) {
-                res.status(400);  // Handle any other bad requests
+                res.status(400);
                 return gson.toJson(new ErrorResponse("Error: bad request"));
             }
         });
 
         Spark.init();
-        Spark.awaitInitialization();  // Wait for server to initialize
+        Spark.awaitInitialization();
         return Spark.port();
     }
 
@@ -138,7 +121,6 @@ public class Server {
         Spark.awaitStop();
     }
 
-    // Helper class to send error responses
     private static class ErrorResponse {
         private final String message;
 
@@ -194,4 +176,5 @@ public class Server {
         }
     }
 }
+
 
