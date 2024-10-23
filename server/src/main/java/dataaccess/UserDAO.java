@@ -1,19 +1,25 @@
 package dataaccess;
 
-import chess.ChessGame;
-import chess.ChessPiece;
-import server.Server;
+import model.UserData;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class UserDAO {
-    public static void main(String[] args) {
-        // Initialize the chess piece for display
-        var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
-        System.out.println("♕ 240 Chess Server: " + piece);
+    private static Map<String, UserData> users = new HashMap<>();
 
-        // Create the Server object and run it on port 8080
-        Server server = new Server();
-        int runningPort = server.run(8080);  // Starts the server on the specified port
+    public void insertUser(UserData user) throws DataAccessException {
+        if (users.containsKey(user.username())) {
+            throw new DataAccessException("Username already exists");
+        }
+        users.put(user.username(), user);
+    }
 
-        // Confirming server start
-        System.out.println("Server is running on port " + runningPort + ". Go to http://localhost:" + runningPort);
+    public UserData getUser(String username) {
+        return users.get(username);
+    }
+
+    public void clearUsers() {
+        users.clear();
+    }
 }
