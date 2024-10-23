@@ -11,9 +11,9 @@ public class GameDAO {
     private static int nextGameId = 1;  // To assign unique IDs to each new game
 
     // Method to create a new game and store it in the in-memory map
-    public GameData createGame(String gameName, String whiteUsername, String blackUsername) {
+    public GameData createGame(String gameName, String username, String playerColor) {
         int gameID = nextGameId++;  // Generate a new unique game ID
-        GameData newGame = new GameData(gameID, whiteUsername, blackUsername, gameName, null);  // Game object with a placeholder for the chess game
+        GameData newGame = new GameData(gameID, username, playerColor, gameName, null);  // Game object with a placeholder for the chess game
         games.put(gameID, newGame);  // Store the new game in the map
         return newGame;
     }
