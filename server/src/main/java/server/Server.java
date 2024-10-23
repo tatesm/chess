@@ -34,16 +34,33 @@ public class Server {
         gameService = new GameService(gameDAO, authTokenDAO);
         clearService = new ClearService();
 
+
         Spark.post("/game", (req, res) -> {
             CreateGameRequest createGameRequest = gson.fromJson(req.body(), CreateGameRequest.class);
             String gameName = createGameRequest.getGameName();
             String authToken = req.headers("authorization");
-            String playerColor = createGameRequest.getPlayerColor();
+            JoinGameRequest joinGameRequest = gson.fromJson(req.body(), JoinGameRequest.class);
+            String playerColor = joinGameRequest.getPlayerColor();
 
-            GameData gameData = gameService.createGame(gameName, authToken, playerColor);
+
+            if (authToken == null || authToken.isEmpty()) {
+                res.status(401);
+                return gson.toJson(new ErrorResponse("Error: Missing authorization token"));
+            }
+
+
+            AuthData authData = AuthTokenDAO.getInstance().getAuth(authToken);
+            if (authData == null) {
+                res.status(401);
+                return gson.toJson(new ErrorResponse("Error: Invalid authorization token"));
+            }
+
+
+            GameData gameData = gameService.createGame(gameName, playerColor, authData.username());
             res.status(200);
             return gson.toJson(gameData);
         });
+
 
         Spark.put("/game", (req, res) -> {
             JoinGameRequest joinGameRequest = gson.fromJson(req.body(), JoinGameRequest.class);
@@ -51,15 +68,36 @@ public class Server {
             int gameID = joinGameRequest.getGameID();
             String playerColor = joinGameRequest.getPlayerColor();
 
+
+            if (authToken == null || authToken.isEmpty()) {
+                res.status(401);
+                return gson.toJson(new ErrorResponse("Error: Missing authorization token"));
+            }
+
+
+            if (playerColor == null || (!playerColor.equalsIgnoreCase("WHITE") && !playerColor.equalsIgnoreCase("BLACK"))) {
+                res.status(400);
+                return gson.toJson(new ErrorResponse("Error: Invalid player color"));
+            }
+
             try {
                 gameService.joinGame(authToken, gameID, playerColor);
                 res.status(200);
                 return "{}";
             } catch (DataAccessException e) {
-                res.status(400);
-                return gson.toJson(new ErrorResponse("Error: unable to join game"));
+                if (e.getMessage().contains("Invalid auth token")) {
+                    res.status(401); // Unauthorized
+                } else if (e.getMessage().contains("Game not found") || e.getMessage().contains("Invalid player color")) {
+                    res.status(400); // Bad request
+                } else if (e.getMessage().contains("already taken")) {
+                    res.status(403); // Forbidden
+                } else {
+                    res.status(500); // Internal server error
+                }
+                return gson.toJson(new ErrorResponse("Error: " + e.getMessage()));
             }
         });
+
 
         Spark.delete("/db", (req, res) -> {
             clearService.clearDatabase();
@@ -124,7 +162,7 @@ public class Server {
             }
         });
         Spark.delete("/session", (req, res) -> {
-            
+
             String authToken = req.headers("authorization");
 
 

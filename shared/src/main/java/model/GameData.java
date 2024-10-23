@@ -1,5 +1,9 @@
 package model;
 
+import java.util.ArrayList;
+import java.util.List;
+
+
 public class GameData {
     private int gameID;
     private String whiteUsername;
@@ -7,13 +11,16 @@ public class GameData {
     private String gameName;
     private Object chessGame;
 
+
     public GameData(int gameID, String whiteUsername, String blackUsername, String gameName, Object chessGame) {
         this.gameID = gameID;
         this.whiteUsername = whiteUsername;
         this.blackUsername = blackUsername;
         this.gameName = gameName;
         this.chessGame = chessGame;
+
     }
+
 
     public int getGameID() {
         return gameID;
@@ -42,5 +49,6 @@ public class GameData {
     public void setBlackUsername(String blackUsername) {
         this.blackUsername = blackUsername;
     }
+
 }
 

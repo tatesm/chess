@@ -17,11 +17,13 @@ public class GameService {
         this.authTokenDAO = authTokenDAO;
     }
 
+
     public GameData createGame(String gameName, String playerColor, String username) {
         return gameDAO.createGame(gameName, username, playerColor);
     }
 
     public GameData joinGame(String authToken, int gameID, String playerColor) throws DataAccessException {
+
 
         AuthData authData = authTokenDAO.getAuth(authToken);
         if (authData == null) {
@@ -35,6 +37,11 @@ public class GameService {
         }
 
 
+        if (playerColor == null || (!playerColor.equalsIgnoreCase("WHITE") && !playerColor.equalsIgnoreCase("BLACK"))) {
+            throw new DataAccessException("Invalid player color");
+        }
+
+
         if (playerColor.equalsIgnoreCase("WHITE")) {
             if (game.getWhiteUsername() != null) {
                 throw new DataAccessException("White player slot is already taken");
@@ -45,13 +52,10 @@ public class GameService {
                 throw new DataAccessException("Black player slot is already taken");
             }
             game.setBlackUsername(authData.username());
-        } else {
-            throw new DataAccessException("Invalid player color");
         }
 
-        // Update the game in the DAO
-        gameDAO.updateGame(game);
 
+        gameDAO.updateGame(game);
         return game;
     }
 
