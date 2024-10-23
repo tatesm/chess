@@ -22,11 +22,11 @@ public class AuthTokenDAO {
     }
 
     public AuthData getAuth(String authToken) {
-        
+
         if (authToken == null || !authTokens.containsKey(authToken)) {
             return null;
         }
-        return authTokens.get(authToken);  // Return the corresponding AuthData
+        return authTokens.get(authToken);
     }
 
     public void deleteAuth(String authToken) {

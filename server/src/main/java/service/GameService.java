@@ -46,12 +46,12 @@ public class GameService {
             if (game.getWhiteUsername() != null) {
                 throw new DataAccessException("White player slot is already taken");
             }
-            game.setWhiteUsername(authData.username());
+            game.setWUsername(authData.username());
         } else if (playerColor.equalsIgnoreCase("BLACK")) {
             if (game.getBlackUsername() != null) {
                 throw new DataAccessException("Black player slot is already taken");
             }
-            game.setBlackUsername(authData.username());
+            game.setBUsername(authData.username());
         }
 
 
