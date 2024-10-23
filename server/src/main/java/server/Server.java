@@ -123,6 +123,30 @@ public class Server {
                 return gson.toJson(new ErrorResponse("Error: bad request"));
             }
         });
+        Spark.delete("/session", (req, res) -> {
+            
+            String authToken = req.headers("authorization");
+
+
+            if (authToken == null) {
+                res.status(400);
+                return gson.toJson(new ErrorResponse("Error: Missing authorization token"));
+            }
+
+
+            AuthData authData = AuthTokenDAO.getInstance().getAuth(authToken);
+            if (authData == null) {
+                res.status(401);
+                return gson.toJson(new ErrorResponse("Error: Invalid auth token"));
+            }
+
+
+            AuthTokenDAO.getInstance().deleteAuth(authToken);
+
+
+            res.status(200);
+            return "{}";
+        });
 
         Spark.init();
         Spark.awaitInitialization();

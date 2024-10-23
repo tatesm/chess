@@ -22,25 +22,34 @@ public class GameService {
     }
 
     public GameData joinGame(String authToken, int gameID, String playerColor) throws DataAccessException {
+
         AuthData authData = authTokenDAO.getAuth(authToken);
         if (authData == null) {
             throw new DataAccessException("Invalid auth token");
         }
-        String username = authData.username();
+
 
         GameData game = gameDAO.getGame(gameID);
         if (game == null) {
             throw new DataAccessException("Game not found");
         }
 
-        if (playerColor.equalsIgnoreCase("WHITE") && game.getWhiteUsername() == null) {
-            game.setWhiteUsername(username);
-        } else if (playerColor.equalsIgnoreCase("BLACK") && game.getBlackUsername() == null) {
-            game.setBlackUsername(username);
+
+        if (playerColor.equalsIgnoreCase("WHITE")) {
+            if (game.getWhiteUsername() != null) {
+                throw new DataAccessException("White player slot is already taken");
+            }
+            game.setWhiteUsername(authData.username());
+        } else if (playerColor.equalsIgnoreCase("BLACK")) {
+            if (game.getBlackUsername() != null) {
+                throw new DataAccessException("Black player slot is already taken");
+            }
+            game.setBlackUsername(authData.username());
         } else {
-            throw new DataAccessException("Player slot is already taken");
+            throw new DataAccessException("Invalid player color");
         }
 
+        // Update the game in the DAO
         gameDAO.updateGame(game);
 
         return game;
