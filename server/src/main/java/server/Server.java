@@ -1,8 +1,12 @@
 package server;
 
+import dataaccess.AuthTokenDAO;
 import dataaccess.DataAccessException;
+import dataaccess.GameDAO;
+import model.GameData;
 import model.UserData;
 import service.ClearService;
+import service.GameService;
 import service.UserService;
 import dataaccess.UserDAO;
 import spark.Spark;
@@ -11,23 +15,78 @@ import com.google.gson.Gson;
 public class Server {
 
     private static final Gson gson = new Gson();
-    private UserService userService;  // UserService instance
+    private UserService userService;
+    private GameService gameService;
+    private ClearService clearService;
 
     public int run(int desiredPort) {
+        // Set the port
         Spark.port(desiredPort);
 
+        // Set static file location before any route mappings
         Spark.staticFiles.location("web");
+
+        // Initialize DAOs and Services
+        // Set the port
+        Spark.port(desiredPort);
+
+        // Set static file location before any route mappings
+        Spark.staticFiles.location("web");
+
+        // Initialize DAOs and Services
+        UserDAO userDAO = new UserDAO();
+        GameDAO gameDAO = new GameDAO();
+        AuthTokenDAO authTokenDAO = AuthTokenDAO.getInstance();  // Use the singleton instance
+        UserService userService = new UserService(userDAO, AuthTokenDAO.getInstance());
+        gameService = new GameService(gameDAO);
+        clearService = new ClearService();
+        // Register the POST /game endpoint to create a new game
+        Spark.post("/game", (req, res) -> {
+            try {
+                // Parse the request body
+                CreateGameRequest createGameRequest = gson.fromJson(req.body(), CreateGameRequest.class);
+                String gameName = createGameRequest.getGameName();
+                String authToken = req.headers("authorization");
+                String playerColor = createGameRequest.getPlayerColor();  // Added playerColor
+
+                // Create the game with 3 arguments
+                GameData gameData = gameService.createGame(gameName, authToken, playerColor);
+                res.status(200);  // OK status
+                return gson.toJson(gameData);  // Return the created game's data
+            } catch (Exception e) {
+                res.status(400);  // Bad request status
+                return gson.toJson(new ErrorResponse("Error: bad request"));
+            }
+        });
+        Spark.put("/game", (req, res) -> {
+            try {
+                // Parse the request body
+                JoinGameRequest joinGameRequest = gson.fromJson(req.body(), JoinGameRequest.class);
+                String authToken = req.headers("authorization");
+                String playerColor = joinGameRequest.getPlayerColor();  // WHITE or BLACK
+                int gameID = joinGameRequest.getGameID();
+
+                // Call the service method to join the game
+                GameData updatedGame = gameService.joinGame(authToken, gameID, playerColor);
+
+                // Return the updated game data
+                res.status(200);
+                return gson.toJson(updatedGame);  // Return the updated game's data
+            } catch (DataAccessException e) {
+                res.status(404);  // Game not found or player already in the game
+                return gson.toJson(new ErrorResponse("Error: Game not found or player slot is taken"));
+            } catch (Exception e) {
+                res.status(400);  // Bad request
+                return gson.toJson(new ErrorResponse("Error: bad request"));
+            }
+        });
+
+        // Register the DELETE /db endpoint to clear the database
         Spark.delete("/db", (req, res) -> {
-            ClearService clearService = new ClearService();
-            clearService.clearDatabase();  // Assuming clearService is initialized
+            clearService.clearDatabase();  // Clear the database using clearService
             res.status(200);
             return "{}";  // Return an empty JSON object
         });
-
-
-        // Initialize UserDAO and UserService
-        UserDAO userDAO = new UserDAO();  // Ideally, this should be a singleton or passed from a service layer
-        userService = new UserService(userDAO);  // Injecting UserDAO into UserService
 
         // Register the POST /user endpoint to register a new user
         Spark.post("/user", (req, res) -> {
@@ -46,8 +105,9 @@ public class Server {
             }
         });
 
+        // Initialize the server
         Spark.init();
-        Spark.awaitInitialization();  // Wait for server to initialize
+        Spark.awaitInitialization();  // Wait for the server to initialize
         return Spark.port();
     }
 
@@ -68,4 +128,37 @@ public class Server {
             return message;
         }
     }
+
+    // CreateGameRequest class to represent the game creation request body
+    class CreateGameRequest {
+        private String gameName;
+        private String playerColor;
+        private String username;
+
+        public String getGameName() {
+            return gameName;
+        }
+
+        public String getPlayerColor() {
+            return playerColor;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+    }
+
+    class JoinGameRequest {
+        private int gameID;
+        private String playerColor;  // Could be "WHITE" or "BLACK"
+
+        public int getGameID() {
+            return gameID;
+        }
+
+        public String getPlayerColor() {
+            return playerColor;
+        }
+    }
+
 }

@@ -8,7 +8,7 @@ import java.util.Map;
 public class AuthTokenDAO {
 
     // In-memory storage for auth tokens
-    private static Map<String, AuthData> authTokens = new HashMap<>();
+    private final Map<String, AuthData> authTokens = new HashMap<>();
 
     // Singleton instance of AuthTokenDAO
     private static AuthTokenDAO instance = new AuthTokenDAO();

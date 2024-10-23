@@ -27,4 +27,8 @@ public class GameDAO {
     public void clearGames() {
         games.clear();
     }
+
+    public void updateGame(GameData game) {
+        games.put(game.getGameID(), game);  // Update the game in the in-memory map
+    }
 }
