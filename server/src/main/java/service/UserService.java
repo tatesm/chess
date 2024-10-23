@@ -8,11 +8,15 @@ import dataaccess.DataAccessException;
 import java.util.UUID;
 
 public class UserService {
-    private UserDAO userDAO = new UserDAO();
+    private final UserDAO userDAO;
+
+    public UserService(UserDAO userDAO) {
+        this.userDAO = userDAO;
+    }
 
     public AuthData register(UserData user) throws DataAccessException {
         userDAO.insertUser(user);
-        String authToken = UUID.randomUUID().toString();  // Generate a token
+        String authToken = UUID.randomUUID().toString();
         return new AuthData(authToken, user.username());
     }
 

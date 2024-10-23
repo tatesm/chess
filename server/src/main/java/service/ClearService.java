@@ -2,17 +2,17 @@ package service;
 
 import dataaccess.UserDAO;
 import dataaccess.GameDAO;
-import dataaccess.AuthDAO;
+import dataaccess.AuthTokenDAO;
 
 public class ClearService {
 
     private UserDAO userDAO = new UserDAO();
     private GameDAO gameDAO = new GameDAO();
-    private AuthDAO authDAO = new AuthDAO();
+    private AuthTokenDAO authTokenDAO = AuthTokenDAO.getInstance();  // Use Singleton instance
 
     public void clearDatabase() {
         userDAO.clearUsers();
         gameDAO.clearGames();
-        authDAO.clearAuthTokens();
+        authTokenDAO.clearAuthTokens();  // Use the correct instance
     }
 }

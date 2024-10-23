@@ -1,8 +1,9 @@
 package service;
 
+import dataaccess.AuthTokenDAO;
+import dataaccess.DataAccessException;
 import dataaccess.UserDAO;
 import dataaccess.GameDAO;
-import dataaccess.AuthDAO;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,19 +15,19 @@ public class ClearServiceTest {
     private ClearService clearService;
     private UserDAO userDAO;
     private GameDAO gameDAO;
-    private AuthDAO authDAO;
+    private AuthTokenDAO authTokenDAO;  // Rename for clarity
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws DataAccessException {
         clearService = new ClearService();
         userDAO = new UserDAO();
         gameDAO = new GameDAO();
-        authDAO = new AuthDAO();
+        authTokenDAO = AuthTokenDAO.getInstance();  // Access the singleton instance
 
         // Insert some dummy data
         userDAO.insertUser(new UserData("testUser", "password", "test@example.com"));
         gameDAO.createGame("Test Game", "testUser", null);
-        authDAO.createAuth(new model.AuthData("token123", "testUser"));
+        authTokenDAO.createAuth(new model.AuthData("token123", "testUser"));
     }
 
     @Test
@@ -37,6 +38,7 @@ public class ClearServiceTest {
         // Verify that the data has been cleared
         assertNull(userDAO.getUser("testUser"));
         assertNull(gameDAO.getGame(1));  // Assuming gameID 1
-        assertNull(authDAO.getAuth("token123"));
+        assertNull(authTokenDAO.getAuth("token123"));
     }
 }
+
