@@ -68,20 +68,33 @@ public class Server {
         });
 
         Spark.post("/user", (req, res) -> {
+
             UserData userData = gson.fromJson(req.body(), UserData.class);
+
+
+            if (userData.username() == null || userData.password() == null || userData.email() == null) {
+                res.status(400);
+                return gson.toJson(new ErrorResponse("Error: Missing required fields"));
+            }
+
             try {
+
+                if (userService.getUser(userData.username()) != null) {
+                    res.status(403);
+                    return gson.toJson(new ErrorResponse("Error: Username already taken"));
+                }
+
                 var authData = userService.register(userData);
                 res.status(200);
                 return gson.toJson(authData);
             } catch (DataAccessException e) {
-                res.status(403);
-                return gson.toJson(new ErrorResponse("Error: username already taken"));
+                res.status(500);
+                return gson.toJson(new ErrorResponse("Error: Server error"));
             } catch (Exception e) {
                 res.status(400);
-                return gson.toJson(new ErrorResponse("Error: bad request"));
+                return gson.toJson(new ErrorResponse("Error: Invalid request"));
             }
         });
-
         Spark.get("/game", (req, res) -> {
             String authToken = req.headers("authorization");
 
