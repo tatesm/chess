@@ -1,8 +1,10 @@
-import chess.*;
+package dataaccess;
 
+import chess.ChessGame;
+import chess.ChessPiece;
 import server.Server;
 
-public class Main {
+public class UserDAO {
     public static void main(String[] args) {
         // Initialize the chess piece for display
         var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
@@ -12,7 +14,6 @@ public class Main {
         Server server = new Server();
         int runningPort = server.run(8080);  // Starts the server on the specified port
 
-        // Confirming  server start
+        // Confirming server start
         System.out.println("Server is running on port " + runningPort + ". Go to http://localhost:" + runningPort);
-    }
 }
