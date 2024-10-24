@@ -265,7 +265,6 @@ public class ChessGame {
 
                     Collection<ChessMove> possibleMoves = piece.pieceMoves(board, currentPosition);
 
-
                     for (ChessMove move : possibleMoves) {
                         if (isAllowed(move)) {
                             return false;
