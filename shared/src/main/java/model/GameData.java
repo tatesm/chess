@@ -11,10 +11,8 @@ public class GameData {
     private ChessGame game;
 
 
-    public GameData(int gameID, String whiteUsername, String blackUsername, String gameName, ChessGame game) {
+    public GameData(int gameID, String gameName, ChessGame game) {
         this.gameID = gameID;
-        this.whiteUsername = whiteUsername;
-        this.blackUsername = blackUsername;
         this.gameName = gameName;
         this.game = game;
 
@@ -24,6 +22,16 @@ public class GameData {
     public int getGameID() {
         return gameID;
     }
+    
+
+    public void setWUsername(String whiteUsername) {
+        this.whiteUsername = whiteUsername;
+    }
+
+    public void setBUsername(String blackUsername) {
+        this.blackUsername = blackUsername;
+    }
+
 
     public String getWhiteUsername() {
         return whiteUsername;
@@ -33,13 +41,6 @@ public class GameData {
         return blackUsername;
     }
 
-    public void setWUsername(String whiteUsername) {
-        this.whiteUsername = whiteUsername;
-    }
-
-    public void setBUsername(String blackUsername) {
-        this.blackUsername = blackUsername;
-    }
 
     public String getGameName() {
         return gameName;

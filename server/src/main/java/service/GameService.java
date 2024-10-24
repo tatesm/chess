@@ -18,7 +18,7 @@ public class GameService {
     }
 
 
-    public GameData createGame(String gameName, String playerColor, String username) {
+    public GameData createGame(String gameName, String username, String playerColor) {
         return gameDAO.createGame(gameName, username, playerColor);
     }
 

@@ -5,72 +5,91 @@ import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import model.AuthData;
 import model.GameData;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
+import model.UserData;
+import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
+
 public class GSTest {
+
     private GameService gameService;
     private GameDAO gameDAO;
     private AuthTokenDAO authTokenDAO;
-    private AuthData authData;
 
     @BeforeEach
     public void setUp() {
         gameDAO = new GameDAO();
         authTokenDAO = AuthTokenDAO.getInstance();
         gameService = new GameService(gameDAO, authTokenDAO);
-
-        // Mock AuthData for testing
-        authData = new AuthData("testToken", "testUser");
-        authTokenDAO.createAuth(authData); // Mock the creation of an auth token
+        gameDAO.clearGames();
     }
 
     @Test
     public void testCreateGameSuccess() {
-        GameData gameData = gameService.createGame("Test Game", "WHITE", "testUser");
-        assertNotNull(gameData);
-        assertEquals("Test Game", gameData.getGameName());
-        assertEquals("testUser", gameData.getWhiteUsername());
+
+        UserData user = new UserData("testUser", "password", "email@example.com");
+        String authToken = "validAuthToken";
+        authTokenDAO.createAuth(new AuthData(authToken, user.username()));
+
+
+        GameData gameData = gameService.createGame("Test Game", "WHITE", user.username());
+
+
+        assertNotNull(gameData, "GameData should not be null");
+        assertEquals("Test Game", gameData.getGameName(), "Game name should match");
     }
 
     @Test
     public void testJoinGameSuccess() throws DataAccessException {
-        GameData gameData = gameService.createGame("Test Game", "WHITE", "testUser");
-        GameData joinedGame = gameService.joinGame("testToken", gameData.getGameID(), "BLACK");
 
-        assertNotNull(joinedGame);
-        assertEquals("testUser", joinedGame.getBlackUsername());
+        GameData gameData = gameService.createGame("Test Game", "WHITE", "testUser");
+
+
+        String authToken = "validAuthToken";
+        authTokenDAO.createAuth(new AuthData(authToken, "testUser"));
+
+
+        GameData joinedGame = gameService.joinGame(authToken, gameData.getGameID(), "BLACK");
+        assertEquals("testUser", joinedGame.getBlackUsername(), "Black username should match the user who joined");
     }
 
     @Test
-    public void testJoinGameInvalidToken() {
+    public void testJoinGameWithTakenSlot() throws DataAccessException {
+
+        GameData gameData = gameService.createGame("Test Game", "WHITE", "testUser");
+
+
+        gameService.joinGame("validAuthToken", gameData.getGameID(), "WHITE");
+
+
+        assertThrows(DataAccessException.class, () -> {
+            gameService.joinGame("validAuthToken", gameData.getGameID(), "WHITE");
+        }, "Expected DataAccessException when trying to join an already taken slot");
+    }
+
+    @Test
+    public void testJoinGameWithInvalidAuthToken() {
         GameData gameData = gameService.createGame("Test Game", "WHITE", "testUser");
         assertThrows(DataAccessException.class, () -> {
-            gameService.joinGame("invalidToken", gameData.getGameID(), "BLACK");
-        });
+            gameService.joinGame("invalidAuthToken", gameData.getGameID(), "BLACK");
+        }, "Expected DataAccessException for invalid auth token");
     }
 
     @Test
-    public void testJoinGameFull() throws DataAccessException {
-        GameData gameData = gameService.createGame("Test Game", "WHITE", "testUser");
-        gameService.joinGame("testToken", gameData.getGameID(), "BLACK");
-
-        assertThrows(DataAccessException.class, () -> {
-            gameService.joinGame("testToken", gameData.getGameID(), "WHITE"); // This should fail
-        });
+    public void testListGamesNoGames() {
+        List<GameData> games = gameService.listGames();
+        assertTrue(games.isEmpty(), "List should be empty when no games have been created");
     }
 
     @Test
-    public void testListGames() {
-        gameService.createGame("Test Game 1", "WHITE", "testUser");
-        gameService.createGame("Test Game 2", "BLACK", "testUser");
+    public void testListGamesWithGames() {
+        gameService.createGame("Test Game 1", "WHITE", "testUser1");
+        gameService.createGame("Test Game 2", "BLACK", "testUser2");
 
         List<GameData> games = gameService.listGames();
-        assertEquals(2, games.size());
+        assertEquals(2, games.size(), "List should contain two games");
     }
 }
 

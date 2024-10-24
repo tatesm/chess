@@ -9,12 +9,12 @@ import java.util.Map;
 
 public class GameDAO {
 
-    private static Map<Integer, GameData> games = new HashMap<>();
+    private static final Map<Integer, GameData> games = new HashMap<>();
     private static int nextGameId = 1;
 
     public GameData createGame(String gameName, String username, String playerColor) {
         int gameID = nextGameId++;
-        GameData newGame = new GameData(gameID, null, null, gameName, null);
+        GameData newGame = new GameData(gameID, gameName, null);
         games.put(gameID, newGame);
         return newGame;
     }
