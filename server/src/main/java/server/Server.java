@@ -67,8 +67,9 @@ public class Server {
         String authToken = req.headers("authorization");
         String playerColor = createGameRequest.getPlayerColor();
 
-        if (isInvalidAuthToken(authToken, res))
+        if (isInvalidAuthToken(authToken, res)) {
             return GSON.toJson(new ErrorResponse("Error: Missing authorization token"));
+        }
 
         AuthData authData = authTokenDAO.getAuth(authToken);
         if (authData == null) {
@@ -87,10 +88,12 @@ public class Server {
         int gameID = joinGameRequest.getGameID();
         String playerColor = joinGameRequest.getPlayerColor();
 
-        if (isInvalidAuthToken(authToken, res))
+        if (isInvalidAuthToken(authToken, res)) {
             return GSON.toJson(new ErrorResponse("Error: Missing authorization token"));
-        if (isInvalidPlayerColor(playerColor, res))
+        }
+        if (isInvalidPlayerColor(playerColor, res)) {
             return GSON.toJson(new ErrorResponse("Error: Invalid player color"));
+        }
 
         try {
             gameService.joinGame(authToken, gameID, playerColor);
@@ -111,7 +114,9 @@ public class Server {
     private Object registerUser(spark.Request req, spark.Response res) {
         UserData userData = GSON.fromJson(req.body(), UserData.class);
 
-        if (isMissingUserData(userData, res)) return GSON.toJson(new ErrorResponse("Error: Missing required fields"));
+        if (isMissingUserData(userData, res)) {
+            return GSON.toJson(new ErrorResponse("Error: Missing required fields"));
+        }
 
         try {
             if (userService.getUser(userData.username()) != null) {

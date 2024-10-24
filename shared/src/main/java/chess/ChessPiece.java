@@ -276,7 +276,8 @@ public class ChessPiece {
             return possibleMovesPawn;
         }
 
-        private void checkMoves(ChessBoard board, ChessPosition myPosition, List<ChessMove> possibleMovesPawn, int currentRow, int currentColumn, int direction) {
+        private void checkMoves(ChessBoard board, ChessPosition myPosition, List<ChessMove> possibleMovesPawn,
+                                int currentRow, int currentColumn, int direction) {
             int[][] directions = {
                     {direction, 0},   // Forward
                     {direction, 1},   // Up-Right or Down-Right
