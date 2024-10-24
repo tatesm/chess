@@ -9,22 +9,22 @@ import java.util.Objects;
  * signature of the existing methods.
  */
 public class ChessMove {
-    private final ChessPosition start_pos;
-    private final ChessPosition end_pos;
-    private final ChessPiece.PieceType promotion_piece;
+    private final ChessPosition startpos;
+    private final ChessPosition endpos;
+    private final ChessPiece.PieceType promotionpiece;
 
     public ChessMove(ChessPosition startPosition, ChessPosition endPosition,
                      ChessPiece.PieceType promotionPiece) {
-        this.start_pos = startPosition;
-        this.end_pos = endPosition;
-        this.promotion_piece = promotionPiece;
+        this.startpos = startPosition;
+        this.endpos = endPosition;
+        this.promotionpiece = promotionPiece;
     }
 
     /**
      * @return ChessPosition of starting location
      */
     public ChessPosition getStartPosition() {
-        return start_pos;
+        return startpos;
     }
 
     @Override
@@ -36,20 +36,20 @@ public class ChessMove {
             return false;
         }
         ChessMove chessMove = (ChessMove) o;
-        return Objects.equals(start_pos, chessMove.start_pos) && Objects.equals(end_pos, chessMove.end_pos)
-                && promotion_piece == chessMove.promotion_piece;
+        return Objects.equals(startpos, chessMove.startpos) && Objects.equals(endpos, chessMove.endpos)
+                && promotionpiece == chessMove.promotionpiece;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(start_pos, end_pos, promotion_piece);
+        return Objects.hash(startpos, endpos, promotionpiece);
     }
 
     /**
      * @return ChessPosition of ending location
      */
     public ChessPosition getEndPosition() {
-        return end_pos;
+        return endpos;
     }
 
     /**
@@ -59,6 +59,6 @@ public class ChessMove {
      * @return Type of piece to promote a pawn to, or null if no promotion
      */
     public ChessPiece.PieceType getPromotionPiece() {
-        return promotion_piece;
+        return promotionpiece;
     }
 }
