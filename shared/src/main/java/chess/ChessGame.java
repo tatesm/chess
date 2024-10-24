@@ -250,32 +250,33 @@ public class ChessGame {
      */
     public boolean isInStalemate(TeamColor teamColor) {
 
-        if (!isInCheck(teamColor)) {
-
-            for (int r = 1; r <= 8; r++) {
-                for (int c = 1; c <= 8; c++) {
-                    ChessPosition currentPosition = new ChessPosition(r, c);
-                    ChessPiece piece = board.getPiece(currentPosition);
-
-
-                    if (piece == null || piece.getTeamColor() != teamColor) {
-                        continue;
-                    }
-
-
-                    Collection<ChessMove> possibleMoves = piece.pieceMoves(board, currentPosition);
-
-                    for (ChessMove move : possibleMoves) {
-                        if (isAllowed(move)) {
-                            return false;
-                        }
-                    }
-                }
-
-            }
-        } else {
+        if (isInCheck(teamColor)) {
             return false;
         }
+
+        for (int r = 1; r <= 8; r++) {
+            for (int c = 1; c <= 8; c++) {
+                ChessPosition currentPosition = new ChessPosition(r, c);
+                ChessPiece piece = board.getPiece(currentPosition);
+
+
+                if (piece == null || piece.getTeamColor() != teamColor) {
+                    continue;
+                }
+
+
+                Collection<ChessMove> possibleMoves = piece.pieceMoves(board, currentPosition);
+
+
+                for (ChessMove move : possibleMoves) {
+                    if (isAllowed(move)) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+
         return true;
     }
 
