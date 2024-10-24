@@ -252,9 +252,9 @@ public class ChessGame {
 
         if (!isInCheck(teamColor)) {
 
-            for (int row = 1; row <= 8; row++) {
-                for (int col = 1; col <= 8; col++) {
-                    ChessPosition currentPosition = new ChessPosition(row, col);
+            for (int r = 1; r <= 8; r++) {
+                for (int c = 1; c <= 8; c++) {
+                    ChessPosition currentPosition = new ChessPosition(r, c);
                     ChessPiece piece = board.getPiece(currentPosition);
 
 
