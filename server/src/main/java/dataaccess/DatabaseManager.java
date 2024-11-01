@@ -9,6 +9,7 @@ public class DatabaseManager {
     private static final String PASSWORD;
     private static final String CONNECTION_URL;
 
+
     /*
      * Load the database information for the db.properties file.
      */
@@ -23,6 +24,7 @@ public class DatabaseManager {
                 DATABASE_NAME = props.getProperty("db.name");
                 USER = props.getProperty("db.user");
                 PASSWORD = props.getProperty("db.password");
+
 
                 var host = props.getProperty("db.host");
                 var port = Integer.parseInt(props.getProperty("db.port"));
@@ -69,13 +71,4 @@ public class DatabaseManager {
             throw new DataAccessException(e.getMessage());
         }
     }
-
-    public static void testConnection() {
-        try (var conn = DatabaseManager.getConnection()) {
-            System.out.println("Connection successful!");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
 }
