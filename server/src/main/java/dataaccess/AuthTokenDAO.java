@@ -2,12 +2,16 @@ package dataaccess;
 
 import model.AuthData;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class AuthTokenDAO {
 
-    private final Map<String, AuthData> authTokens = new HashMap<>();
+
     private static AuthTokenDAO instance = new AuthTokenDAO();
 
     private AuthTokenDAO() {
@@ -18,7 +22,21 @@ public class AuthTokenDAO {
     }
 
     public void createAuth(AuthData authData) {
-        authTokens.put(authData.authToken(), authData);
+        String sql = "CREATE INTO auth_tokens (token, username) VALUES (?, ?, ?);";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, authData.authToken());
+            stmt.setString(2, authData.username());
+
+
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            if (e.getErrorCode() == 1062) {
+                throw new DataAccessException("token already exists: " + authData.authToken());
+            } else {
+                throw new DataAccessException("Error inserting user: " + e.getMessage());
+            }
+        }
     }
 
     public AuthData getAuth(String authToken) {
