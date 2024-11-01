@@ -69,4 +69,13 @@ public class DatabaseManager {
             throw new DataAccessException(e.getMessage());
         }
     }
+
+    public static void testConnection() {
+        try (var conn = DatabaseManager.getConnection()) {
+            System.out.println("Connection successful!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
