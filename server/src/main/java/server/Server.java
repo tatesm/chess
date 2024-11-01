@@ -105,7 +105,7 @@ public class Server {
         }
     }
 
-    private Object clearDatabase(spark.Request req, spark.Response res) {
+    private Object clearDatabase(spark.Request req, spark.Response res) throws DataAccessException {
         clearService.clearDatabase();
         res.status(200);
         return "{}";

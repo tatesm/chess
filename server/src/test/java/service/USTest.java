@@ -16,7 +16,7 @@ public class USTest {
     private AuthTokenDAO authTokenDAO;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws DataAccessException {
         userDAO = new UserDAO();
         authTokenDAO = AuthTokenDAO.getInstance();
         userService = new UserService(userDAO, authTokenDAO);
@@ -83,7 +83,7 @@ public class USTest {
     }
 
     @Test
-    public void testGetUserNotFound() {
+    public void testGetUserNotFound() throws DataAccessException {
         assertNull(userService.getUser("nonExistentUser")); // Should return null for non-existent user
     }
 }
