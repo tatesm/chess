@@ -40,13 +40,33 @@ public class AuthTokenDAO {
         }
     }
 
-    public AuthData getAuth(String authToken) {
+    public AuthData getAuth(String authToken) throws DataAccessException {
+        String sql = "SELECT * FROM auth_tokens WHERE token = ?;";
 
-        if (authToken == null || !authTokens.containsKey(authToken)) {
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            
+            stmt.setString(1, authToken);
+
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+
+                    String username = rs.getString("username");
+
+
+                    return new AuthData(authToken, username);
+                }
+            }
+
             return null;
+
+        } catch (SQLException e) {
+            throw new DataAccessException("Error retrieving auth token: " + authToken, e);
         }
-        return authTokens.get(authToken);
     }
+
 
     public void deleteAuth(String authToken) {
         authTokens.remove(authToken);
