@@ -27,7 +27,7 @@ public class GSTest {
     }
 
     @Test
-    public void testCreateGameSuccess() {
+    public void testCreateGameSuccess() throws DataAccessException {
 
         UserData user = new UserData("testUser", "password", "email@example.com");
         String authToken = "validAuthToken";
