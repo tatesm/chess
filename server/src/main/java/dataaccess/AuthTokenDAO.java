@@ -4,13 +4,10 @@ import model.AuthData;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class AuthTokenDAO {
-
 
     private static AuthTokenDAO instance = new AuthTokenDAO();
 
@@ -22,18 +19,17 @@ public class AuthTokenDAO {
     }
 
     public void createAuth(AuthData authData) throws DataAccessException {
-        String sql = "CREATE INTO auth_tokens (token, username) VALUES (?, ?, ?);";
+        String sql = "INSERT INTO auth_tokens (token, username) VALUES (?, ?);";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, authData.authToken());
             stmt.setString(2, authData.username());
 
-
             stmt.executeUpdate();
         } catch (SQLException e) {
             if (e.getErrorCode() == 1062) {
-                throw new DataAccessException("token already exists: " + authData.authToken());
+                throw new DataAccessException("Token already exists: " + authData.authToken());
             } else {
                 throw new DataAccessException("Error creating token: " + e.getMessage());
             }
@@ -46,16 +42,11 @@ public class AuthTokenDAO {
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            
             stmt.setString(1, authToken);
-
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-
                     String username = rs.getString("username");
-
-
                     return new AuthData(authToken, username);
                 }
             }
@@ -67,13 +58,28 @@ public class AuthTokenDAO {
         }
     }
 
+    public void deleteAuth(String authToken) throws DataAccessException {
+        String sql = "DELETE FROM auth_tokens WHERE token = ?;";
 
-    public void deleteAuth(String authToken) {
-        authTokens.remove(authToken);
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, authToken);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Error deleting auth token: " + authToken, e);
+        }
     }
 
-    public void clearAuthTokens() {
-        authTokens.clear();
+    public void clearAuthTokens() throws DataAccessException {
+        String sql = "DELETE FROM auth_tokens;";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Error clearing auth tokens", e);
+        }
     }
 }
+
 

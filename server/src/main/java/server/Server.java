@@ -61,7 +61,7 @@ public class Server {
         Spark.delete("/session", this::logoutUser);
     }
 
-    private Object createGame(spark.Request req, spark.Response res) {
+    private Object createGame(spark.Request req, spark.Response res) throws DataAccessException {
         CreatedStuff.CreateGameRequest createGameRequest = GSON.fromJson(req.body(), CreatedStuff.CreateGameRequest.class);
         String gameName = createGameRequest.getGameName();
         String authToken = req.headers("authorization");
@@ -135,7 +135,7 @@ public class Server {
         }
     }
 
-    private Object listGames(spark.Request req, spark.Response res) {
+    private Object listGames(spark.Request req, spark.Response res) throws DataAccessException {
         String authToken = req.headers("authorization");
 
         AuthData authData = authTokenDAO.getAuth(authToken);
@@ -164,7 +164,7 @@ public class Server {
         }
     }
 
-    private Object logoutUser(spark.Request req, spark.Response res) {
+    private Object logoutUser(spark.Request req, spark.Response res) throws DataAccessException {
         String authToken = req.headers("authorization");
 
         if (authToken == null) {
