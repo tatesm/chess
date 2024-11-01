@@ -71,4 +71,44 @@ public class DatabaseManager {
             throw new DataAccessException(e.getMessage());
         }
     }
+
+    private final String[] createStatements = {
+            """
+    CREATE TABLE IF NOT EXISTS users (
+        username VARCHAR(255) PRIMARY KEY,
+        password VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL
+    );
+    """,
+            """
+    CREATE TABLE IF NOT EXISTS auth_tokens (
+        token VARCHAR(255) PRIMARY KEY,
+        username VARCHAR(255) NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+    );
+    """,
+            """
+    CREATE TABLE IF NOT EXISTS games (
+        game_id INT AUTO_INCREMENT PRIMARY KEY,
+        game_state JSON NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+    """
+    };
+
+
+    private void configureDatabase() throws DataAccessException {
+        DatabaseManager.createDatabase();
+        try (var conn = DatabaseManager.getConnection()) {
+            for (var statement : createStatements) {
+                try (var preparedStatement = conn.prepareStatement(statement)) {
+                    preparedStatement.executeUpdate();
+                }
+            }
+        } catch (SQLException ex) {
+            throw new DataAccessException(String.format("Unable to configure database: %s", ex.getMessage()));
+        }
+    }
 }
