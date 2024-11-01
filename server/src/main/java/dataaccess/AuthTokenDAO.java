@@ -21,8 +21,9 @@ public class AuthTokenDAO {
         return instance;
     }
 
-    public void createAuth(AuthData authData) {
+    public void createAuth(AuthData authData) throws DataAccessException {
         String sql = "CREATE INTO auth_tokens (token, username) VALUES (?, ?, ?);";
+
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, authData.authToken());
@@ -34,7 +35,7 @@ public class AuthTokenDAO {
             if (e.getErrorCode() == 1062) {
                 throw new DataAccessException("token already exists: " + authData.authToken());
             } else {
-                throw new DataAccessException("Error inserting user: " + e.getMessage());
+                throw new DataAccessException("Error creating token: " + e.getMessage());
             }
         }
     }
