@@ -22,7 +22,7 @@ public class GameData {
     public int getGameID() {
         return gameID;
     }
-    
+
 
     public void setWUsername(String whiteUsername) {
         this.whiteUsername = whiteUsername;
@@ -44,6 +44,10 @@ public class GameData {
 
     public String getGameName() {
         return gameName;
+    }
+
+    public ChessGame getGame() {
+        return game;
     }
 
 }
