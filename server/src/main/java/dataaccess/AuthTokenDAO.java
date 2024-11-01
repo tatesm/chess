@@ -54,7 +54,7 @@ public class AuthTokenDAO {
             return null;
 
         } catch (SQLException e) {
-            throw new DataAccessException("Error retrieving auth token: " + authToken, e);
+            throw new DataAccessException("Error retrieving auth token: " + authToken + " - " + e.getMessage());
         }
     }
 
@@ -66,7 +66,7 @@ public class AuthTokenDAO {
             stmt.setString(1, authToken);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new DataAccessException("Error deleting auth token: " + authToken, e);
+            throw new DataAccessException("Error deleting auth token: " + authToken + " - " + e.getMessage());
         }
     }
 
@@ -77,7 +77,7 @@ public class AuthTokenDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new DataAccessException("Error clearing auth tokens", e);
+            throw new DataAccessException("Error clearing auth tokens" + e.getMessage());
         }
     }
 }
