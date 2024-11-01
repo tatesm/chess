@@ -18,7 +18,7 @@ public class GameService {
     }
 
 
-    public GameData createGame(String gameName, String username, String playerColor) {
+    public GameData createGame(String gameName, String username, String playerColor) throws DataAccessException {
         return gameDAO.createGame(gameName, username, playerColor);
     }
 
@@ -59,7 +59,7 @@ public class GameService {
         return game;
     }
 
-    public List<GameData> listGames() {
+    public List<GameData> listGames() throws DataAccessException {
         return gameDAO.listGames();
     }
 }

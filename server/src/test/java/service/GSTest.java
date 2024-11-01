@@ -19,7 +19,7 @@ public class GSTest {
     private AuthTokenDAO authTokenDAO;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws DataAccessException {
         gameDAO = new GameDAO();
         authTokenDAO = AuthTokenDAO.getInstance();
         gameService = new GameService(gameDAO, authTokenDAO);
@@ -70,7 +70,7 @@ public class GSTest {
     }
 
     @Test
-    public void testJoinGameWithInvalidAuthToken() {
+    public void testJoinGameWithInvalidAuthToken() throws DataAccessException {
         GameData gameData = gameService.createGame("Test Game", "WHITE", "testUser");
         assertThrows(DataAccessException.class, () -> {
             gameService.joinGame("invalidAuthToken", gameData.getGameID(), "BLACK");
@@ -78,13 +78,13 @@ public class GSTest {
     }
 
     @Test
-    public void testListGamesNoGames() {
+    public void testListGamesNoGames() throws DataAccessException {
         List<GameData> games = gameService.listGames();
         assertTrue(games.isEmpty(), "List should be empty when no games have been created");
     }
 
     @Test
-    public void testListGamesWithGames() {
+    public void testListGamesWithGames() throws DataAccessException {
         gameService.createGame("Test Game 1", "WHITE", "testUser1");
         gameService.createGame("Test Game 2", "BLACK", "testUser2");
 
