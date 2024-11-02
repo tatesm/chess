@@ -63,4 +63,3 @@ public class GameService {
         return gameDAO.listGames();
     }
 }
-

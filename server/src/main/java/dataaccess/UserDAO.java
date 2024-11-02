@@ -8,30 +8,57 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-
 public class UserDAO {
 
-    public void storeUserPassword(String username, String clearTextPassword) {
-        String hashedPassword = BCrypt.hashpw(clearTextPassword, BCrypt.gensalt());
 
+    public void storeUserPassword(String username, String clearTextPassword) throws DataAccessException {
+        String hashedPassword = BCrypt.hashpw(clearTextPassword, BCrypt.gensalt());
         saveUser(username, hashedPassword);
     }
 
 
-    public boolean verifyUser(String username, String providedClearTextPassword) {
-
+    public boolean verifyUser(String username, String providedClearTextPassword) throws DataAccessException {
         String hashedPassword = getHashedPasswordFromDatabase(username);
-        return BCrypt.checkpw(providedClearTextPassword, hashedPassword);
+        return hashedPassword != null && BCrypt.checkpw(providedClearTextPassword, hashedPassword);
     }
 
 
-    private void saveUser(String username, String hashedPassword) {
+    private void saveUser(String username, String hashedPassword) throws DataAccessException {
+        String sql = "UPDATE users SET password = ? WHERE username = ?";
 
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, hashedPassword);
+            stmt.setString(2, username);
+            int rowsUpdated = stmt.executeUpdate();
+
+            if (rowsUpdated == 0) {
+                throw new DataAccessException("User not found for username: " + username);
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Error saving user password: " + e.getMessage());
+        }
     }
 
-    private String getHashedPasswordFromDatabase(String username) {
 
-        return "";
+    private String getHashedPasswordFromDatabase(String username) throws DataAccessException {
+        String sql = "SELECT password FROM users WHERE username = ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, username);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("password");
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Error retrieving hashed password for user: " + username + ". " + e.getMessage());
+        }
+        return null;
     }
 
 
@@ -54,14 +81,7 @@ public class UserDAO {
         }
     }
 
-    /*
-        public UserData getUser(String username) {
-            return users.get(username);
-        }
 
-        public void clearUsers() {
-            users.clear();
-        }*/
     public UserData getUser(String username) throws DataAccessException {
         String sql = "SELECT * FROM users WHERE username = ?";
 
@@ -72,7 +92,6 @@ public class UserDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-
                     String userUsername = rs.getString("username");
                     String password = rs.getString("password");
                     String email = rs.getString("email");
@@ -85,6 +104,7 @@ public class UserDAO {
         }
     }
 
+
     public void clearUsers() throws DataAccessException {
         String sql = "DELETE FROM users";
 
@@ -96,7 +116,5 @@ public class UserDAO {
             throw new DataAccessException("Error clearing users: " + e.getMessage());
         }
     }
-
-
 }
 

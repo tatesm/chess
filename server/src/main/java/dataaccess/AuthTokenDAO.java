@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 public class AuthTokenDAO {
 
-    private static AuthTokenDAO instance = new AuthTokenDAO();
+    private static final AuthTokenDAO instance = new AuthTokenDAO();
 
     private AuthTokenDAO() {
     }
@@ -36,7 +36,6 @@ public class AuthTokenDAO {
         }
     }
 
-    //
     public AuthData getAuth(String authToken) throws DataAccessException {
         String sql = "SELECT * FROM auth_tokens WHERE token = ?;";
 
