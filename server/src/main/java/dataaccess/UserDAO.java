@@ -10,47 +10,6 @@ import java.sql.SQLException;
 
 public class UserDAO {
 
-    // checks if the password matches the stored hashed password for the user
-    public boolean verifyUser(String username, String password) throws DataAccessException {
-        String hashedPassword = fetchHashedPassword(username);
-        return hashedPassword != null && BCrypt.checkpw(password, hashedPassword);
-    }
-
-    // stores a user password after hashing it
-    public void storeUserPassword(String username, String clearTextPassword) throws DataAccessException {
-        String hashedPassword = BCrypt.hashpw(clearTextPassword, BCrypt.gensalt());
-        savePassword(username, hashedPassword);
-    }
-
-    // updates the users password in the database
-    private void savePassword(String username, String hashedPassword) throws DataAccessException {
-        String sql = "UPDATE users SET password = ? WHERE username = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, hashedPassword);
-            stmt.setString(2, username);
-            if (stmt.executeUpdate() == 0) {
-                throw new DataAccessException("No such user: " + username);
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException("Failed to update password: " + e.getMessage());
-        }
-    }
-
-    // grabs the hashed password from the database
-    private String fetchHashedPassword(String username) throws DataAccessException {
-        String sql = "SELECT password FROM users WHERE username = ?";
-        // query database for hashed password
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, username);
-            try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next() ? rs.getString("password") : null;
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException("Could not retrieve password for: " + username + ". Reason: " + e.getMessage());
-        }
-    }
 
     // inserts new user rec into the database
     public void insertUser(UserData user) throws DataAccessException {
