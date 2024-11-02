@@ -9,13 +9,13 @@ import java.sql.SQLException;
 
 public class AuthTokenDAO {
 
-    private static final AuthTokenDAO instance = new AuthTokenDAO();
+    private static final AuthTokenDAO INSTANCE = new AuthTokenDAO();
 
     private AuthTokenDAO() {
     }
 
     public static AuthTokenDAO getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     public void createAuth(AuthData authData) throws DataAccessException {

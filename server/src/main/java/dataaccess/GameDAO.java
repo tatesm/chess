@@ -1,6 +1,5 @@
 package dataaccess;
 
-import chess.ChessGame;
 import model.GameData;
 import com.google.gson.Gson;
 
@@ -10,10 +9,10 @@ import java.util.List;
 
 public class GameDAO {
     private Object chessGameState;
-    String gameStateJson = gson.toJson(chessGameState);
+    String gameStateJson = GSON.toJson(chessGameState);
 
 
-    private static final Gson gson = new Gson();
+    private static final Gson GSON = new Gson();
 
     public GameData createGame(String gameName, String username, String playerColor) throws DataAccessException {
         String sql = "INSERT INTO games (game_name, game_state) VALUES (?, NULL)";
