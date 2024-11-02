@@ -1,6 +1,7 @@
 package dataaccess;
 
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,6 +10,29 @@ import java.sql.SQLException;
 
 
 public class UserDAO {
+
+    public void storeUserPassword(String username, String clearTextPassword) {
+        String hashedPassword = BCrypt.hashpw(clearTextPassword, BCrypt.gensalt());
+
+        saveUser(username, hashedPassword);
+    }
+
+
+    public boolean verifyUser(String username, String providedClearTextPassword) {
+
+        String hashedPassword = getHashedPasswordFromDatabase(username);
+        return BCrypt.checkpw(providedClearTextPassword, hashedPassword);
+    }
+
+
+    private void saveUser(String username, String hashedPassword) {
+
+    }
+
+    private String getHashedPasswordFromDatabase(String username) {
+
+        return "";
+    }
 
 
     public void insertUser(UserData user) throws DataAccessException {
@@ -52,7 +76,7 @@ public class UserDAO {
                     String userUsername = rs.getString("username");
                     String password = rs.getString("password");
                     String email = rs.getString("email");
-                    return new UserData(userUsername, email, password);
+                    return new UserData(userUsername, password, email);
                 }
             }
             return null;
