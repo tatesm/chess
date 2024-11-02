@@ -83,23 +83,34 @@ public class GameDAO {
 
 
     public void updateGame(GameData game) throws DataAccessException {
-        String sql = "UPDATE games SET game_state = ?"
-                + (game.getWhiteUsername() != null ? ", white_username = ?" : "")
-                + (game.getBlackUsername() != null ? ", black_username = ?" : "")
-                + " WHERE game_id = ?";
+        // Base SQL for updating game_state and the dynamic SQL parts for white and black usernames
+        StringBuilder sqlBuilder = new StringBuilder("UPDATE games SET game_state = ?");
+
+        if (game.getWhiteUsername() != null) {
+            sqlBuilder.append(", white_username = ?");
+        }
+        if (game.getBlackUsername() != null) {
+            sqlBuilder.append(", black_username = ?");
+        }
+        sqlBuilder.append(" WHERE game_id = ?");
+
+        String sql = sqlBuilder.toString();
+
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             int index = 1;
-            stmt.setString(index++, gson.toJson(game.getGame()));
+            stmt.setString(index++, gson.toJson(game.getGame())); // Convert game state to JSON and set it
 
+            // Conditionally set white and black usernames if they are present
             if (game.getWhiteUsername() != null) {
                 stmt.setString(index++, game.getWhiteUsername());
             }
             if (game.getBlackUsername() != null) {
                 stmt.setString(index++, game.getBlackUsername());
             }
-            stmt.setInt(index, game.getGameID());
+
+            stmt.setInt(index, game.getGameID()); // Always set game_id at the end
 
             int rowsUpdated = stmt.executeUpdate();
             System.out.println("updateGame: Rows updated - " + rowsUpdated + " for GameID: " + game.getGameID());

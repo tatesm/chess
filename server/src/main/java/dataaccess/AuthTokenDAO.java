@@ -36,6 +36,7 @@ public class AuthTokenDAO {
         }
     }
 
+    //
     public AuthData getAuth(String authToken) throws DataAccessException {
         String sql = "SELECT * FROM auth_tokens WHERE token = ?;";
 
