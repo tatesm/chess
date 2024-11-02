@@ -77,7 +77,7 @@ public class Server {
             return GSON.toJson(new ErrorResponse("Error: Invalid authorization token"));
         }
 
-        GameData gameData = gameService.createGame(gameName, playerColor, authData.username());
+        GameData gameData = gameService.createGame(gameName, authData.username(), playerColor);
         res.status(200);
         return GSON.toJson(gameData);
     }
