@@ -63,6 +63,17 @@ public class GameDAOTests {
     }
 
     @Test
+    public void testNotClearGames() throws DataAccessException {
+        gameDAO.createGame("Game 1", "User1", "WHITE");
+        gameDAO.createGame("Game 2", "User2", "BLACK");
+
+        gameDAO.clearGames();
+        List<GameData> games = gameDAO.listGames();
+
+        assertFalse(games.isEmpty());
+    }
+
+    @Test
     public void testUpdateGameSuccess() throws DataAccessException {
         GameData game = gameDAO.createGame("Test Game", "User1", "WHITE");
         game.setWhiteUsername("User1");

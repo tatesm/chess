@@ -45,14 +45,34 @@ class UserDAOTest {
     }
 
     @Test
+    void testGetUserFound() throws DataAccessException {
+        // Positive case: Attempt to get a existent user
+        userDAO.insertUser(new UserData("user1", "user1@example.com", "password1"));
+        UserData user = userDAO.getUser("user1");
+        assertNotNull(user);
+    }
+
+    @Test
     void testClearUsers() throws DataAccessException {
         // Positive case: Clear users
-        userDAO.insertUser(new UserData("user1", "user1@example.com", "password1"));
+        userDAO.insertUser(new UserData("user3", "user1@example.com", "password1"));
         userDAO.insertUser(new UserData("user2", "user2@example.com", "password2"));
 
         userDAO.clearUsers();
 
-        assertNull(userDAO.getUser("user1"));
+        assertNull(userDAO.getUser("user3"));
+        assertNull(userDAO.getUser("user2"));
+    }
+
+    @Test
+    void testClearUsersNegative() throws DataAccessException {
+        // Negative: not clear users
+        userDAO.insertUser(new UserData("user3", "user1@example.com", "password1"));
+        userDAO.insertUser(new UserData("user2", "user2@example.com", "password2"));
+
+        userDAO.clearUsers();
+
+        assertNull(userDAO.getUser("user3"));
         assertNull(userDAO.getUser("user2"));
     }
 }

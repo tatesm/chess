@@ -94,4 +94,13 @@ class AuthTokenDAOTest {
 
         assertNull(result, "AuthData should be null for a non-existent token");
     }
+
+    @Test
+    void testGetAuthFound() throws DataAccessException {
+
+        AuthData result = authTokenDAO.getAuth("token1");
+
+
+        assertNotNull(result, "AuthData token1 for a existent token");
+    }
 }
