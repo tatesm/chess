@@ -52,7 +52,7 @@ public class DatabaseManager {
             conn.setCatalog(DATABASE_NAME);
             return conn;
         } catch (SQLException e) {
-            throw new DataAccessException("Error connecting to database: " + e.getMessage());
+            throw new DataAccessException(e.getMessage());
         }
     }
 

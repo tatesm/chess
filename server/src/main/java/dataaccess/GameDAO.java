@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GameDAO {
+    private Object chessGameState;
+    String gameStateJson = gson.toJson(chessGameState);
+
 
     private static final Gson gson = new Gson();
 

@@ -18,6 +18,7 @@ import java.util.List;
 
 public class Server {
 
+
     private static final Gson GSON = new Gson();
     private UserDAO userDAO;
     private GameDAO gameDAO;
@@ -168,8 +169,8 @@ public class Server {
         String authToken = req.headers("authorization");
 
         if (authToken == null) {
-            res.status(400);
-            return GSON.toJson(new ErrorResponse("Error: Missing authorization token"));
+            res.status(403);
+            return GSON.toJson(new ErrorResponse("Forbidden"));
         }
 
         AuthData authData = authTokenDAO.getAuth(authToken);
