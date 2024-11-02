@@ -20,14 +20,14 @@ public class UserService {
     }
 
     public AuthData register(UserData user) throws DataAccessException {
-        // Hash the password before storing it
+
         String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
         UserData userWithHashedPassword = new UserData(user.username(), hashedPassword, user.email());
 
-        // Insert the user with the hashed password
+
         userDAO.insertUser(userWithHashedPassword);
 
-        // Generate an auth token
+
         String authToken = UUID.randomUUID().toString();
         authTokenDAO.createAuth(new AuthData(authToken, user.username()));
 
@@ -41,7 +41,7 @@ public class UserService {
     public AuthData login(UserData user) throws DataAccessException {
         UserData foundUser = userDAO.getUser(user.username());
 
-        // Check if user exists and if the password matches using BCrypt
+
         if (foundUser != null && BCrypt.checkpw(user.password(), foundUser.password())) {
             String authToken = UUID.randomUUID().toString();
             authTokenDAO.createAuth(new AuthData(authToken, user.username()));

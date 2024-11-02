@@ -24,11 +24,11 @@ public class GameData {
     }
 
 
-    public void setWUsername(String whiteUsername) {
+    public void setWhiteUsername(String whiteUsername) {
         this.whiteUsername = whiteUsername;
     }
 
-    public void setBUsername(String blackUsername) {
+    public void setBlackUsername(String blackUsername) {
         this.blackUsername = blackUsername;
     }
 

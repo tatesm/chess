@@ -65,8 +65,8 @@ public class GameDAOTests {
     @Test
     public void testUpdateGame_Success() throws DataAccessException {
         GameData game = gameDAO.createGame("Test Game", "User1", "WHITE");
-        game.setWUsername("User1");
-        game.setBUsername("User2");
+        game.setWhiteUsername("User1");
+        game.setBlackUsername("User2");
 
         gameDAO.updateGame(game);
 

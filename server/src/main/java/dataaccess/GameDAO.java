@@ -9,8 +9,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static dataaccess.DatabaseManager.getConnection;
-
 public class GameDAO {
 
     private static final Gson gson = new Gson();
@@ -50,8 +48,20 @@ public class GameDAO {
                 if (rs.next()) {
                     String gameName = rs.getString("game_name");
                     String gameStateJson = rs.getString("game_state");
-                    ChessGame game = gson.fromJson(gameStateJson, ChessGame.class); // Deserialize JSON to ChessGame
-                    return new GameData(gameID, gameName, game);
+                    String whiteUsername = rs.getString("white_username");
+                    String blackUsername = rs.getString("black_username");
+
+
+                    ChessGame game = gson.fromJson(gameStateJson, ChessGame.class);
+
+
+                    GameData gameData = new GameData(gameID, gameName, game);
+                    gameData.setWhiteUsername(whiteUsername);
+                    gameData.setBlackUsername(blackUsername);
+
+                    System.out.println("getGame: Retrieved data - GameID: " + gameID + ", WhiteUsername: " + whiteUsername + ", BlackUsername: " + blackUsername);
+
+                    return gameData;
                 }
             }
         } catch (SQLException | JsonSyntaxException e) {
@@ -73,15 +83,30 @@ public class GameDAO {
 
 
     public void updateGame(GameData game) throws DataAccessException {
-        String sql = "UPDATE games SET game_state = ?, white_username = ?, black_username = ? WHERE game_id = ?";
+        String sql = "UPDATE games SET game_state = ?"
+                + (game.getWhiteUsername() != null ? ", white_username = ?" : "")
+                + (game.getBlackUsername() != null ? ", black_username = ?" : "")
+                + " WHERE game_id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, gson.toJson(game.getGame()));
-            stmt.setString(2, game.getWhiteUsername());
-            stmt.setString(3, game.getBlackUsername());
-            stmt.setInt(4, game.getGameID());
-            stmt.executeUpdate();
+            int index = 1;
+            stmt.setString(index++, gson.toJson(game.getGame()));
+
+            if (game.getWhiteUsername() != null) {
+                stmt.setString(index++, game.getWhiteUsername());
+            }
+            if (game.getBlackUsername() != null) {
+                stmt.setString(index++, game.getBlackUsername());
+            }
+            stmt.setInt(index, game.getGameID());
+
+            int rowsUpdated = stmt.executeUpdate();
+            System.out.println("updateGame: Rows updated - " + rowsUpdated + " for GameID: " + game.getGameID());
+
+            if (rowsUpdated == 0) {
+                throw new DataAccessException("No rows updated. Game ID might be incorrect.");
+            }
 
         } catch (SQLException e) {
             throw new DataAccessException("Error updating game: " + e.getMessage());
