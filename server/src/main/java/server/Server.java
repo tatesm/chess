@@ -1,10 +1,7 @@
 package server;
 
 import created.CreatedStuff;
-import dataaccess.AuthTokenDAO;
-import dataaccess.DataAccessException;
-import dataaccess.GameDAO;
-import dataaccess.UserDAO;
+import dataaccess.*;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
@@ -14,10 +11,10 @@ import service.UserService;
 import spark.Spark;
 import com.google.gson.Gson;
 
+import java.sql.SQLException;
 import java.util.List;
 
 public class Server {
-
 
     private static final Gson GSON = new Gson();
     private UserDAO userDAO;
@@ -41,9 +38,17 @@ public class Server {
     }
 
     private void initializeDAOs() {
-        userDAO = new UserDAO();
-        gameDAO = new GameDAO();
-        authTokenDAO = AuthTokenDAO.getInstance();
+        try {
+            DatabaseManager databaseManager = new DatabaseManager();
+            databaseManager.createDatabase();
+            databaseManager.configureDatabase();
+            userDAO = new UserDAO();
+            gameDAO = new GameDAO();
+            authTokenDAO = AuthTokenDAO.getInstance();
+        } catch (DataAccessException e) {
+            throw new RuntimeException(String.format("Unable to configure database" + e.getMessage()));
+        }
+
     }
 
     private void initializeServices() {
@@ -169,8 +174,8 @@ public class Server {
         String authToken = req.headers("authorization");
 
         if (authToken == null) {
-            res.status(403);
-            return GSON.toJson(new ErrorResponse("Forbidden"));
+            res.status(400);
+            return GSON.toJson(new ErrorResponse("Error: Missing authorization token"));
         }
 
         AuthData authData = authTokenDAO.getAuth(authToken);

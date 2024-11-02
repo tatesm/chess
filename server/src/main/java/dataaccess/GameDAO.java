@@ -16,13 +16,12 @@ public class GameDAO {
     private static final Gson gson = new Gson();
 
     public GameData createGame(String gameName, String username, String playerColor) throws DataAccessException {
-        String sql = "INSERT INTO games (game_name, game_state, username, player_color, created_at) VALUES (?, NULL, ?, ?, CURRENT_TIMESTAMP)";
+        String sql = "INSERT INTO games (game_name, game_state) VALUES (?, NULL)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, gameName);
-            stmt.setString(2, username);
-            stmt.setString(3, playerColor);
+
 
             stmt.executeUpdate();
 
