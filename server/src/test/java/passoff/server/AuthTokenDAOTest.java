@@ -19,7 +19,7 @@ class AuthTokenDAOTest {
     }
 
     @Test
-    void testCreateAuth_Success() throws DataAccessException {
+    void testCreateAuthSuccess() throws DataAccessException {
 
         String token = "newToken";
         String username = "newUser";
@@ -35,7 +35,7 @@ class AuthTokenDAOTest {
     }
 
     @Test
-    void testCreateAuth_DuplicateToken() throws DataAccessException {
+    void testCreateAuthDuplicateToken() throws DataAccessException {
 
         String token = "duplicateToken";
         String username = "firstUser";
@@ -50,7 +50,7 @@ class AuthTokenDAOTest {
     }
 
     @Test
-    void testDeleteAuth_Success() throws DataAccessException {
+    void testDeleteAuthSuccess() throws DataAccessException {
         // Arrange
         String token = "tokenToDelete";
         String username = "userToDelete";
@@ -66,7 +66,7 @@ class AuthTokenDAOTest {
     }
 
     @Test
-    void testDeleteAuth_NonExistentToken() throws DataAccessException {
+    void testDeleteAuthNonExistentToken() throws DataAccessException {
 
         assertDoesNotThrow(() -> authTokenDAO.deleteAuth("nonExistentToken"),
                 "Deleting a non-existent token should not throw an exception");
@@ -87,7 +87,7 @@ class AuthTokenDAOTest {
     }
 
     @Test
-    void testGetAuth_NotFound() throws DataAccessException {
+    void testGetAuthNotFound() throws DataAccessException {
 
         AuthData result = authTokenDAO.getAuth("nonExistentToken");
 

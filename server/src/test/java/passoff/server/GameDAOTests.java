@@ -22,7 +22,7 @@ public class GameDAOTests {
     }
 
     @Test
-    public void testCreateGame_Success() throws DataAccessException {
+    public void testCreateGameSuccess() throws DataAccessException {
         GameData game = gameDAO.createGame("Test Game", "TestUser", "WHITE");
         assertNotNull(game);
         assertEquals("Test Game", game.getGameName());
@@ -30,14 +30,14 @@ public class GameDAOTests {
     }
 
     @Test
-    public void testCreateGame_NullGameName() {
+    public void testCreateGameNullGameName() {
         assertThrows(DataAccessException.class, () -> {
             gameDAO.createGame(null, "TestUser", "WHITE");
         });
     }
 
     @Test
-    public void testGetGame_Success() throws DataAccessException {
+    public void testGetGameSuccess() throws DataAccessException {
         GameData createdGame = gameDAO.createGame("Test Game", "TestUser", "WHITE");
         GameData retrievedGame = gameDAO.getGame(createdGame.getGameID());
         assertNotNull(retrievedGame);
@@ -46,7 +46,7 @@ public class GameDAOTests {
     }
 
     @Test
-    public void testGetGame_InvalidID() throws DataAccessException {
+    public void testGetGameInvalidID() throws DataAccessException {
         GameData game = gameDAO.getGame(-1); // Assuming -1 is an invalid ID
         assertNull(game);
     }
@@ -63,7 +63,7 @@ public class GameDAOTests {
     }
 
     @Test
-    public void testUpdateGame_Success() throws DataAccessException {
+    public void testUpdateGameSuccess() throws DataAccessException {
         GameData game = gameDAO.createGame("Test Game", "User1", "WHITE");
         game.setWhiteUsername("User1");
         game.setBlackUsername("User2");
@@ -76,13 +76,13 @@ public class GameDAOTests {
     }
 
     @Test
-    public void testUpdateGame_InvalidID() {
+    public void testUpdateGameInvalidID() {
         GameData game = new GameData(-1, "Invalid Game", new ChessGame());
         assertThrows(DataAccessException.class, () -> gameDAO.updateGame(game));
     }
 
     @Test
-    public void testListGames_Success() throws DataAccessException {
+    public void testListGamesSuccess() throws DataAccessException {
         GameData game1 = gameDAO.createGame("Game 1", "User1", "WHITE");
         GameData game2 = gameDAO.createGame("Game 2", "User2", "BLACK");
 
@@ -94,7 +94,7 @@ public class GameDAOTests {
     }
 
     @Test
-    public void testListGames_NoGames() throws DataAccessException {
+    public void testListGamesNoGames() throws DataAccessException {
         gameDAO.clearGames();
         List<GameData> games = gameDAO.listGames();
         assertTrue(games.isEmpty());
