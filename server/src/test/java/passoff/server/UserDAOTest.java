@@ -56,23 +56,23 @@ class UserDAOTest {
     void testClearUsers() throws DataAccessException {
         // Positive case: Clear users
         userDAO.insertUser(new UserData("user3", "user1@example.com", "password1"));
-        userDAO.insertUser(new UserData("user2", "user2@example.com", "password2"));
+        userDAO.insertUser(new UserData("user4", "user2@example.com", "password2"));
 
         userDAO.clearUsers();
 
         assertNull(userDAO.getUser("user3"));
-        assertNull(userDAO.getUser("user2"));
+        assertNull(userDAO.getUser("user4"));
     }
 
     @Test
     void testClearUsersNegative() throws DataAccessException {
         // Negative: not clear users
-        userDAO.insertUser(new UserData("user3", "user1@example.com", "password1"));
-        userDAO.insertUser(new UserData("user2", "user2@example.com", "password2"));
+        userDAO.insertUser(new UserData("user5", "user1@example.com", "password1"));
+        userDAO.insertUser(new UserData("user6", "user2@example.com", "password2"));
 
         userDAO.clearUsers();
 
-        assertNull(userDAO.getUser("user3"));
-        assertNull(userDAO.getUser("user2"));
+        assertNull(userDAO.getUser("user5"));
+        assertNull(userDAO.getUser("user6"));
     }
 }
