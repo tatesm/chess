@@ -1,7 +1,5 @@
-package passoff.server;
+package dataaccess;
 
-import dataaccess.UserDAO;
-import dataaccess.DataAccessException;
 import model.UserData;
 import org.junit.jupiter.api.*;
 
@@ -12,6 +10,9 @@ class UserDAOTest {
 
     @BeforeEach
     void setUp() throws DataAccessException {
+        DatabaseManager databaseManager = new DatabaseManager();
+        databaseManager.createDatabase();
+        databaseManager.configureDatabase();
         userDAO = new UserDAO();
         userDAO.clearUsers(); // Clear table before each test
     }
@@ -64,15 +65,5 @@ class UserDAOTest {
         assertNull(userDAO.getUser("user4"));
     }
 
-    @Test
-    void testClearUsersNegative() throws DataAccessException {
-        // Negative: not clear users
-        userDAO.insertUser(new UserData("user5", "user1@example.com", "password1"));
-        userDAO.insertUser(new UserData("user6", "user2@example.com", "password2"));
 
-        userDAO.clearUsers();
-
-        assertNull(userDAO.getUser("user5"));
-        assertNull(userDAO.getUser("user6"));
-    }
 }

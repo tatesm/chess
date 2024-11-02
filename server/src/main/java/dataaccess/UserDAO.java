@@ -10,7 +10,6 @@ import java.sql.SQLException;
 
 public class UserDAO {
 
-
     // inserts new user rec into the database
     public void insertUser(UserData user) throws DataAccessException {
         String sql = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";

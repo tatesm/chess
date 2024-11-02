@@ -1,10 +1,10 @@
-package passoff.server;
+package dataaccess;
 
-import dataaccess.AuthTokenDAO;
-import dataaccess.DataAccessException;
 import model.AuthData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,8 +14,12 @@ class AuthTokenDAOTest {
 
     @BeforeEach
     void setUp() throws DataAccessException {
+        DatabaseManager databaseManager = new DatabaseManager();
+        databaseManager.createDatabase();
+        databaseManager.configureDatabase();
         authTokenDAO = AuthTokenDAO.getInstance();
         authTokenDAO.clearAuthTokens();
+
     }
 
     @Test
@@ -97,8 +101,9 @@ class AuthTokenDAOTest {
 
     @Test
     void testGetAuthFound() throws DataAccessException {
-
-        AuthData result = authTokenDAO.getAuth("token1");
+        String uuid = UUID.randomUUID().toString();
+        authTokenDAO.createAuth(new AuthData(uuid, "done"));
+        AuthData result = authTokenDAO.getAuth(uuid);
 
 
         assertNotNull(result, "AuthData token1 for a existent token");

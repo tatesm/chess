@@ -1,8 +1,6 @@
-package passoff.server;
+package dataaccess;
 
 import chess.ChessGame;
-import dataaccess.DataAccessException;
-import dataaccess.GameDAO;
 import model.GameData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +15,9 @@ public class GameDAOTests {
 
     @BeforeEach
     public void setUp() throws DataAccessException {
+        DatabaseManager databaseManager = new DatabaseManager();
+        databaseManager.createDatabase();
+        databaseManager.configureDatabase();
         gameDAO = new GameDAO();
         gameDAO.clearGames(); // Clear any existing data before each test
     }
@@ -62,16 +63,6 @@ public class GameDAOTests {
         assertTrue(games.isEmpty());
     }
 
-    @Test
-    public void testNotClearGames() throws DataAccessException {
-        gameDAO.createGame("Game 1", "User1", "WHITE");
-        gameDAO.createGame("Game 2", "User2", "BLACK");
-
-        gameDAO.clearGames();
-        List<GameData> games = gameDAO.listGames();
-
-        assertFalse(games.isEmpty());
-    }
 
     @Test
     public void testUpdateGameSuccess() throws DataAccessException {

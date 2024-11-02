@@ -2,6 +2,7 @@ package service;
 
 import dataaccess.AuthTokenDAO;
 import dataaccess.DataAccessException;
+import dataaccess.DatabaseManager;
 import dataaccess.GameDAO;
 import model.AuthData;
 import model.GameData;
@@ -20,6 +21,9 @@ public class GSTest {
 
     @BeforeEach
     public void setUp() throws DataAccessException {
+        DatabaseManager databaseManager = new DatabaseManager();
+        databaseManager.createDatabase();
+        databaseManager.configureDatabase();
         gameDAO = new GameDAO();
         authTokenDAO = AuthTokenDAO.getInstance();
         gameService = new GameService(gameDAO, authTokenDAO);
@@ -30,7 +34,7 @@ public class GSTest {
     public void testCreateGameSuccess() throws DataAccessException {
 
         UserData user = new UserData("testUser", "password", "email@example.com");
-        String authToken = "validAuthToken";
+        String authToken = "newuuidAuthToken";
         authTokenDAO.createAuth(new AuthData(authToken, user.username()));
 
 

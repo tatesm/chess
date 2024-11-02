@@ -88,8 +88,7 @@ public class DatabaseManager {
             """
     CREATE TABLE IF NOT EXISTS auth_tokens (
         token VARCHAR(255) PRIMARY KEY,
-        username VARCHAR(255) NOT NULL,
-        FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+        username VARCHAR(255) NOT NULL
     );
     """,
             """

@@ -2,6 +2,7 @@ package service;
 
 import dataaccess.AuthTokenDAO;
 import dataaccess.DataAccessException;
+import dataaccess.DatabaseManager;
 import dataaccess.UserDAO;
 import model.AuthData;
 import model.UserData;
@@ -17,6 +18,9 @@ public class USTest {
 
     @BeforeEach
     public void setUp() throws DataAccessException {
+        DatabaseManager databaseManager = new DatabaseManager();
+        databaseManager.createDatabase();
+        databaseManager.configureDatabase();
         userDAO = new UserDAO();
         authTokenDAO = AuthTokenDAO.getInstance();
         userService = new UserService(userDAO, authTokenDAO);
