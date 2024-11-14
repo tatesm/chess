@@ -1,6 +1,6 @@
 package ui;
 
-import server.ServerFacade;
+import client.ServerFacade;
 import exception.ResponseException;
 
 import java.util.Scanner;
@@ -8,6 +8,7 @@ import java.util.Scanner;
 public class PostLoginClient {
     private final ServerFacade serverFacade;
     private final Scanner scanner;
+    private int joinedGameId;
 
     public PostLoginClient(ServerFacade serverFacade, Scanner scanner) {
         this.serverFacade = serverFacade;
@@ -74,4 +75,10 @@ public class PostLoginClient {
         serverFacade.logout();
         System.out.println("Logged out.");
     }
+
+    public int getJoinedGameId() {
+        // Return the game ID of the joined game or -1 if no game is joined
+        return this.joinedGameId; // Ensure you have a variable to track the game ID
+    }
+
 }
