@@ -6,6 +6,11 @@ public class ChessClient {
     private final Scanner scanner = new Scanner(System.in);
     private boolean loggedIn = false;
     private final chessdoing ui = new chessdoing();
+    private final ServerFacade serverFacade;
+
+    public ChessClient(String serverUrl) {
+        this.serverFacade = new ServerFacade(serverUrl);
+    }
 
     public void run() {
         while (true) {
@@ -68,6 +73,18 @@ public class ChessClient {
             default:
                 System.out.println("Invalid command. Type 'Help' for a list of commands.");
         }
+    }
+
+    private void logout() {
+        // Call ServerFacade's logout method
+
+        serverFacade.logout();
+
+        // Set the logged-in status to false
+        loggedIn = false;
+
+        // Inform the user of the successful logout
+        System.out.println("You have been logged out.");
     }
 
     private void promptLogin() {
