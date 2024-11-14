@@ -1,4 +1,4 @@
-import ui.chessdoing;
+package ui;
 
 import java.util.Scanner;
 
@@ -122,4 +122,9 @@ public class ChessClient {
         System.out.println("- Play Game: Join a game to play.");
         System.out.println("- Observe Game: Join a game to observe.");
     }
+
+    public void drawChessboard(boolean isWhiteBottom) {
+        // Drawing code here
+    }
+
 }
