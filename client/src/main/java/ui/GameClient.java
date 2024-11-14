@@ -1,6 +1,7 @@
 package ui;
 
-import server.ServerFacade;
+
+import client.ServerFacade;
 import exception.ResponseException;
 
 import java.util.Scanner;
@@ -15,6 +16,7 @@ public class GameClient {
         this.scanner = scanner;
         this.gameId = gameId;
     }
+
 
     public void run() {
         while (true) {

@@ -44,7 +44,8 @@ public class PreloginClient {
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
-        serverFacade.register(username, password);
+        String email = scanner.nextLine();
+        serverFacade.register(username, password, email);
         System.out.println("Successfully registered. You can now log in.");
     }
 
