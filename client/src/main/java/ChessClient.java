@@ -1,3 +1,5 @@
+import ui.chessdoing;
+
 import java.util.Scanner;
 
 public class ChessClient {
@@ -104,4 +106,3 @@ public class ChessClient {
         System.out.println("- Observe Game: Join a game to observe.");
     }
 }
-
