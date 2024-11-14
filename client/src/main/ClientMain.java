@@ -1,35 +1,38 @@
-package ui;
+package client;
 
-
+import ui.PreloginClient;
+import ui.PostloginClient;
+import ui.GameClient;
 import client.ServerFacade;
 
 import java.util.Scanner;
 
 public class ClientMain {
     public static void main(String[] args) {
-        var serverUrl = "http://localhost:8080";
+        String serverUrl = "http://localhost:8080";
         if (args.length == 1) {
             serverUrl = args[0];
         }
 
-        var scanner = new Scanner(System.in);
-        var serverFacade = new ServerFacade(serverUrl);
+        ServerFacade serverFacade = new ServerFacade(serverUrl);
+        Scanner scanner = new Scanner(System.in);
 
         while (true) {
-            // Start in the PreloginClient
+            // Start in PreloginClient
             PreloginClient preloginClient = new PreloginClient(serverFacade, scanner);
             preloginClient.run();
 
-            // After successful login, enter PostLoginClient
-            PostLoginClient postLoginClient = new PostLoginClient(serverFacade, scanner);
-            postLoginClient.run();
+            // After successful login, move to PostloginClient
+            PostloginClient postloginClient = new PostloginClient(serverFacade, scanner);
+            postloginClient.run();
 
-            // If playing a game, enter GameClient
-            int gameId = postLoginClient.getJoinedGameId();
-            if (gameId != -1) { // Example check if a game has been joined
+            // If a game is joined, enter GameClient
+            int gameId = postloginClient.getJoinedGameId();
+            if (gameId != -1) {  // Check if a game has been joined
                 GameClient gameClient = new GameClient(serverFacade, scanner, gameId);
                 gameClient.run();
             }
         }
     }
 }
+

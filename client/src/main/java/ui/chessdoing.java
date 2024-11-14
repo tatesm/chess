@@ -22,6 +22,28 @@ public class chessdoing {
                 {EscapeSequences.WHITE_ROOK, EscapeSequences.WHITE_KNIGHT, EscapeSequences.WHITE_BISHOP, EscapeSequences.WHITE_QUEEN,
                         EscapeSequences.WHITE_KING, EscapeSequences.WHITE_BISHOP, EscapeSequences.WHITE_KNIGHT, EscapeSequences.WHITE_ROOK}
         };
+        public void displayBoard() {
+            String[] board = {
+                    "♜♞♝♛♚♝♞♜",
+                    "♟♟♟♟♟♟♟♟",
+                    "        ",
+                    "        ",
+                    "        ",
+                    "        ",
+                    "♙♙♙♙♙♙♙♙",
+                    "♖♘♗♕♔♗♘♖"
+            };
+            for (int i = 0; i < 8; i++) {
+                System.out.print((8 - i) + " ");
+                for (int j = 0; j < 8; j++) {
+                    // Alternate colors by checking parity of (i + j)
+                    System.out.print(((i + j) % 2 == 0) ? "\u25A1" : "\u25A0"); // light and dark squares
+                    System.out.print(board[i].charAt(j) + " ");
+                }
+                System.out.println();
+            }
+            System.out.println("  a b c d e f g h");
+        }
 
         // Row and column headers
         String[] columns = isWhiteBottom ? new String[]{"a", "b", "c", "d", "e", "f", "g", "h"} : new String[]{"h", "g", "f", "e", "d", "c", "b", "a"};
