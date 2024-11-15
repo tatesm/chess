@@ -6,18 +6,28 @@ import model.GameData;
 
 import java.util.Scanner;
 
+/**
+ * Repl class provides a command-line interface to interact with the game server.
+ * Allows users to login, register, manage games, and play.
+ */
 public class Repl {
     private final Scanner scanner = new Scanner(System.in);
     private final ServerFacade serverFacade;
     private boolean loggedIn = false;
     private boolean inGame = false;
-    private String authToken;  // Store authToken after login
+    private String authToken;  // Stores auth token after login
     private int currentGameId = -1;
 
+    /**
+     * Initializes the REPL with the given server URL.
+     */
     public Repl(String serverUrl) {
         this.serverFacade = new ServerFacade(serverUrl);
     }
 
+    /**
+     * Main loop to control user interaction flow: pre-login, post-login, and gameplay.
+     */
     public void run() {
         while (true) {
             if (!loggedIn) {
@@ -30,6 +40,9 @@ public class Repl {
         }
     }
 
+    /**
+     * Handles commands available before logging in.
+     */
     private void preLoginLoop() {
         while (!loggedIn) {
             System.out.println("Pre-login commands: help, login, register, quit");
@@ -40,15 +53,15 @@ public class Repl {
                 case "help" -> displayHelp();
                 case "login" -> promptLogin();
                 case "register" -> promptRegister();
-                case "quit" -> {
-                    System.out.println("Goodbye!");
-                    System.exit(0);
-                }
+                case "quit" -> exitProgram();
                 default -> System.out.println("Invalid command. Type 'help' for a list of commands.");
             }
         }
     }
 
+    /**
+     * Handles commands available after login but before joining a game.
+     */
     private void postLoginLoop() {
         while (loggedIn && !inGame) {
             System.out.println("Post-login commands: help, logout, create game, list games, play game, observe game");
@@ -67,6 +80,9 @@ public class Repl {
         }
     }
 
+    /**
+     * Handles gameplay commands once the user has joined or started a game.
+     */
     private void gameplayLoop() {
         while (inGame) {
             System.out.println("Gameplay commands: move, exit game");
@@ -81,11 +97,14 @@ public class Repl {
         }
     }
 
+    /**
+     * Displays a summary of available commands based on the user's current state.
+     */
     private void displayHelp() {
-        System.out.println("Commands available depend on the current mode:");
-        System.out.println("In pre-login: help, login, register, quit");
-        System.out.println("In post-login: help, logout, create game, list games, play game, observe game");
-        System.out.println("In game: move, exit game");
+        System.out.println("Available commands:");
+        System.out.println("Pre-login: help, login, register, quit");
+        System.out.println("Post-login: help, logout, create game, list games, play game, observe game");
+        System.out.println("In-game: move, exit game");
     }
 
     private void promptLogin() {
@@ -98,13 +117,13 @@ public class Repl {
             AuthData authData = serverFacade.login(username, password);
             if (authData != null) {
                 loggedIn = true;
-                authToken = authData.authToken(); // Save auth token for further requests
+                authToken = authData.authToken();
                 System.out.println("Login successful.");
             } else {
-                System.out.println("Login failed. Check your username and password.");
+                System.out.println("Login failed. Please check your credentials.");
             }
         } catch (Exception e) {
-            System.out.println("Error during login: " + e.getMessage());
+            System.out.println("Login error: " + e.getMessage());
         }
     }
 
@@ -126,7 +145,7 @@ public class Repl {
                 System.out.println("Registration failed. Try a different username.");
             }
         } catch (Exception e) {
-            System.out.println("Error during registration: " + e.getMessage());
+            System.out.println("Registration error: " + e.getMessage());
         }
     }
 
@@ -135,30 +154,30 @@ public class Repl {
             serverFacade.logout(authToken);
             loggedIn = false;
             authToken = null;
-            System.out.println("Logged out successfully.");
+            System.out.println("Logged out.");
         } catch (Exception e) {
-            System.out.println("Error during logout: " + e.getMessage());
+            System.out.println("Logout error: " + e.getMessage());
         }
     }
 
     private void createGame() {
-        System.out.print("Enter a name for the new game: ");
+        System.out.print("Game name: ");
         String gameName = scanner.nextLine();
         System.out.print("Choose color (white or black): ");
         String playerColor = scanner.nextLine().trim().toLowerCase();
 
         if (!playerColor.equals("white") && !playerColor.equals("black")) {
-            System.out.println("Invalid color. Please choose 'white' or 'black'.");
+            System.out.println("Invalid color choice. Please choose 'white' or 'black'.");
             return;
         }
 
         try {
-            GameData gameData = serverFacade.createGame(authToken, gameName, playerColor);  // Create game
-            currentGameId = gameData.getGameID();  // Set the currentGameId for the created game
+            GameData gameData = serverFacade.createGame(authToken, gameName, playerColor);
+            currentGameId = gameData.getGameID();
             inGame = true;
-            System.out.println("Game created successfully. You are now in the game.");
+            System.out.println("Game created. You are now in the game.");
         } catch (Exception e) {
-            System.out.println("Error creating game: " + e.getMessage());
+            System.out.println("Game creation error: " + e.getMessage());
         }
     }
 
@@ -166,7 +185,7 @@ public class Repl {
         try {
             var games = serverFacade.listGames(authToken);
             if (games.isEmpty()) {
-                System.out.println("No games available.");
+                System.out.println("No available games.");
             } else {
                 System.out.println("Available games:");
                 for (int i = 0; i < games.size(); i++) {
@@ -190,12 +209,12 @@ public class Repl {
         }
 
         try {
-            serverFacade.joinGame(authToken, gameId, playerColor);  // Join game with token, gameId, and color
-            currentGameId = gameId;  // Set the currentGameId after successfully joining
+            serverFacade.joinGame(authToken, gameId, playerColor);
+            currentGameId = gameId;
             inGame = true;
             System.out.println("Joined game. Ready to play.");
         } catch (Exception e) {
-            System.out.println("Error joining game: " + e.getMessage());
+            System.out.println("Game join error: " + e.getMessage());
         }
     }
 
@@ -208,7 +227,7 @@ public class Repl {
             inGame = true;
             System.out.println("Observing game.");
         } catch (Exception e) {
-            System.out.println("Error observing game: " + e.getMessage());
+            System.out.println("Game observe error: " + e.getMessage());
         }
     }
 
@@ -217,18 +236,20 @@ public class Repl {
         String move = scanner.nextLine();
 
         try {
-            serverFacade.makeMove(currentGameId, move, authToken); // Provide gameId, move, and authToken
-            System.out.println("Move accepted.");
+            serverFacade.makeMove(currentGameId, move, authToken);
+            System.out.println("Move successful.");
         } catch (Exception e) {
-            System.out.println("Invalid move: " + e.getMessage());
+            System.out.println("Move error: " + e.getMessage());
         }
     }
 
-
     private void exitGame() {
         inGame = false;
-        System.out.println("Exited game.");
+        System.out.println("You have exited the game.");
+    }
+
+    private void exitProgram() {
+        System.out.println("Goodbye!");
+        System.exit(0);
     }
 }
-
-
