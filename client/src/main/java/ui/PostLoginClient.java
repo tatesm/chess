@@ -50,8 +50,9 @@ public class PostLoginClient {
                 return "list games";
             }
             case "play game" -> {
-                if (playGame()) {
-                    return "play game";
+                String result = playGame();
+                if (result != null) {
+                    return result; // Return the result of playGame
                 }
             }
             case "observe game" -> {
@@ -82,25 +83,25 @@ public class PostLoginClient {
         return joinedGameId;
     }
 
-    private boolean playGame() {
+    private String playGame() {
         try {
             System.out.print("Enter game number: ");
             int gameId = Integer.parseInt(scanner.nextLine());
             String playerColor = chooseColor();
             if (playerColor == null) {
-                return false; // User canceled the action
+                return null; // User canceled the action
             }
 
             serverFacade.joinGame(authToken, gameId, playerColor);
             joinedGameId = gameId;
             System.out.println("Joined game #" + gameId + " as " + playerColor + ". Transitioning to game view...");
-            return true;
+            return "play game"; // Indicate successful transition to game
         } catch (NumberFormatException e) {
             System.out.println("Invalid game ID. Please enter a valid number.");
         } catch (Exception e) {
             System.out.println("Failed to join game. Please try again.");
         }
-        return false;
+        return null; // Return null on failure or cancellation
     }
 
     private void createGame() {
