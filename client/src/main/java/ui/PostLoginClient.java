@@ -8,6 +8,7 @@ public class PostLoginClient {
     private final ServerFacade serverFacade;
     private final Scanner scanner;
     private String authToken;  // Store authToken here
+    private int joinedGameId = -1;
 
     public PostLoginClient(ServerFacade serverFacade, Scanner scanner) {
         this.serverFacade = serverFacade;
