@@ -116,7 +116,7 @@ public class ServerFacade {
         }
     }
 
-    // In ServerFacade.java
+   
     public void joinGame(String authToken, int gameID, String playerColor) throws Exception {
         URL url = new URL(serverUrl + "/game"); // Ensure correct endpoint
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -125,7 +125,7 @@ public class ServerFacade {
         connection.setRequestProperty("Content-Type", "application/json");
         connection.setDoOutput(true);
 
-        
+
         CreatedStuff.JoinGameRequest request = new CreatedStuff.JoinGameRequest(gameID, playerColor);
         String requestBody = gson.toJson(request);
         try (OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream())) {
