@@ -65,6 +65,7 @@ public class Server {
         Spark.get("/game", this::listGames);
         Spark.post("/session", this::loginUser);
         Spark.delete("/session", this::logoutUser);
+        
     }
 
     private Object createGame(spark.Request req, spark.Response res) throws DataAccessException {

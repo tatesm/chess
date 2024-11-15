@@ -74,7 +74,7 @@ public class Repl {
                 case "create game" -> createGame();
                 case "list games" -> listGames();
                 case "play game" -> playGame();
-                case "observe game" -> observeGame();
+                // case "observe game" -> observeGame();
                 default -> System.out.println("Invalid command. Type 'help' for a list of commands.");
             }
         }
@@ -83,6 +83,7 @@ public class Repl {
     /**
      * Handles gameplay commands once the user has joined or started a game.
      */
+
     private void gameplayLoop() {
         while (inGame) {
             System.out.println("Gameplay commands: move, exit game");
@@ -90,8 +91,8 @@ public class Repl {
             String command = scanner.nextLine().trim().toLowerCase();
 
             switch (command) {
-                case "move" -> makeMove();
-                case "exit game" -> exitGame();
+                //case "move" -> makeMove();
+                //case "exit game" -> exitGame();
                 default -> System.out.println("Invalid command. Type 'move' or 'exit game'.");
             }
         }
@@ -217,7 +218,7 @@ public class Repl {
             System.out.println("Game join error: " + e.getMessage());
         }
     }
-
+/*
     private void observeGame() {
         System.out.print("Enter game number to observe: ");
         int gameId = Integer.parseInt(scanner.nextLine().trim());
@@ -246,7 +247,7 @@ public class Repl {
     private void exitGame() {
         inGame = false;
         System.out.println("You have exited the game.");
-    }
+    }*/
 
     private void exitProgram() {
         System.out.println("Goodbye!");
