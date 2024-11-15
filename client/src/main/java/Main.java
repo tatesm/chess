@@ -1,6 +1,4 @@
 import chess.*;
-import chess.ChessGame;
-import chess.ChessPiece;
 import client.ServerFacade;
 import ui.GameClient;
 import ui.PostLoginClient;
@@ -74,3 +72,4 @@ public class Main {
         System.out.println("Goodbye!");
     }
 }
+

@@ -27,19 +27,18 @@ public class PreLoginClient {
      * Starts the main command loop for pre-login functionality.
      */
     public String run() {
-        while (true) {
-            String command = getUserCommand();
-
-            try {
-                String result = processCommand(command);
-                if (result != null) {
-                    return result;
+        return Base.run(
+                this::getUserCommand,
+                command -> {
+                    try {
+                        return processCommand(command);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e); // Wrap checked exception as unchecked
+                    }
                 }
-            } catch (Exception e) {
-                handleError(e);
-            }
-        }
+        );
     }
+
 
     private String getUserCommand() {
         System.out.print("Enter command (register, login, help, quit): ");
