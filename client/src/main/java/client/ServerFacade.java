@@ -1,5 +1,7 @@
 package client;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import created.CreatedStuff;
 import model.AuthData;
@@ -12,6 +14,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 public class ServerFacade {
 
@@ -60,25 +63,37 @@ public class ServerFacade {
             writer.flush();
         }
 
-        handleError(connection);
+        if (connection.getResponseCode() >= 400) {
+            try (InputStreamReader errorReader = new InputStreamReader(connection.getErrorStream())) {
+
+                Map<String, Object> errorResponse = gson.fromJson(errorReader, Map.class);
+                System.out.println("Login failed: " + errorResponse.get("message"));
+            }
+            return null;
+        }
 
         try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
             return gson.fromJson(reader, AuthData.class);
         }
     }
 
+
     public List<GameData> listGames(String authToken) throws Exception {
         URL url = new URL(serverUrl + "/game");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("Authorization", authToken);
+        connection.setRequestProperty("Authorization", authToken);  // Set the auth token header
+
         handleError(connection);
 
         try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
-            return gson.fromJson(reader, new TypeToken<List<GameData>>() {
+            JsonObject responseObject = gson.fromJson(reader, JsonObject.class);
+            JsonArray gamesArray = responseObject.getAsJsonArray("games");
+            return gson.fromJson(gamesArray, new TypeToken<List<GameData>>() {
             }.getType());
         }
     }
+
 
     public GameData createGame(String authToken, String gameName, String playerColor) throws Exception {
         URL url = new URL(serverUrl + "/game");
@@ -101,26 +116,41 @@ public class ServerFacade {
         }
     }
 
-    public void joinGame(String authToken, int gameId, String playerColor) throws Exception {
-        URL url = new URL(serverUrl + "/game");
+    // In ServerFacade.java
+    public void joinGame(String authToken, int gameID, String playerColor) throws Exception {
+        URL url = new URL(serverUrl + "/game"); // Ensure correct endpoint
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("PUT");
-        connection.setRequestProperty("Content-Type", "application/json");
         connection.setRequestProperty("Authorization", authToken);
+        connection.setRequestProperty("Content-Type", "application/json");
         connection.setDoOutput(true);
 
-        String requestBody = gson.toJson(new CreatedStuff.JoinGameRequest(gameId, playerColor));
+        
+        CreatedStuff.JoinGameRequest request = new CreatedStuff.JoinGameRequest(gameID, playerColor);
+        String requestBody = gson.toJson(request);
         try (OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream())) {
             writer.write(requestBody);
             writer.flush();
         }
 
-        handleError(connection);
-
-        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
-            reader.read(); // Consume response to ensure proper resource release
+        // Check for error response and parse it as JSON
+        if (connection.getResponseCode() >= 400) {
+            try (InputStreamReader errorReader = new InputStreamReader(connection.getErrorStream())) {
+                ErrorResponse errorResponse = gson.fromJson(errorReader, ErrorResponse.class);
+                throw new Exception(errorResponse.getMessage());
+            }
         }
     }
+
+    // Define the ErrorResponse class in ServerFacade (or a shared package)
+    private static class ErrorResponse {
+        private String message;
+
+        public String getMessage() {
+            return message;
+        }
+    }
+
 
     public void makeMove(int gameId, String move, String authToken) throws Exception {
         URL url = new URL(serverUrl + "/game/" + gameId + "/move");

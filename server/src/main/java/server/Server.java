@@ -206,8 +206,9 @@ public class Server {
     }
 
     private void handleJoinGameExceptions(DataAccessException e, spark.Response res) {
-        if (e.getMessage().contains("Invalid auth token")) {
+        if (e.getMessage().contains("Invalid auth token")) { // Error from gameService
             res.status(401);
+            res.body(GSON.toJson(new ErrorResponse("Error: Invalid authorization token")));
         } else if (e.getMessage().contains("Game not found") || e.getMessage().contains("Invalid player color")) {
             res.status(400);
         } else if (e.getMessage().contains("already taken")) {
@@ -216,6 +217,7 @@ public class Server {
             res.status(500);
         }
     }
+
 
     private boolean isMissingUserData(UserData userData, spark.Response res) {
         if (userData.username() == null || userData.password() == null || userData.email() == null) {

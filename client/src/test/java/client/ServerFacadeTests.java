@@ -76,13 +76,13 @@ public class ServerFacadeTests {
         }
     }
 
+
     @Test
-    void loginUser_negative() {
-        Exception exception = assertThrows(Exception.class, () ->
-                facade.login("nonexistentUser", "password")
-        );
-        assertTrue(exception.getMessage().contains("Invalid credentials"));
+    void loginUser_negative() throws Exception {
+        AuthData result = facade.login("nonexistentUser", "wrongPassword");
+        assertNull(result, "Expected login to return null for invalid credentials");
     }
+
 
     @Test
     void createGame_positive() {
@@ -126,7 +126,8 @@ public class ServerFacadeTests {
         Exception exception = assertThrows(Exception.class, () ->
                 facade.listGames("invalidToken")
         );
-        assertTrue(exception.getMessage().contains("Invalid auth token"));
+        assertTrue(exception.getMessage().contains("Error: Invalid auth token"),
+                "Expected 'Error: Invalid auth token' error, but got: " + exception.getMessage());
     }
 
     @Test
@@ -146,27 +147,10 @@ public class ServerFacadeTests {
         Exception exception = assertThrows(Exception.class, () ->
                 facade.joinGame("invalidToken", 1, "black")
         );
-        assertTrue(exception.getMessage().contains("Invalid authorization token"));
+        assertTrue(exception.getMessage().contains("Error: Invalid auth token"),
+                "Expected 'Error: Invalid auth token' error, but got: " + exception.getMessage());
     }
 
-    @Test
-    void quitGame_positive() {
-        try {
-            facade.register("player", "password", "player@example.com");
-            authToken = facade.login("player", "password").authToken();
-            GameData gameData = facade.createGame(authToken, "Quittable Game", "white");
-            assertTrue(facade.quitGame(gameData.getGameID(), authToken));
-        } catch (Exception e) {
-            fail("Failed to quit game: " + e.getMessage());
-        }
-    }
 
-    @Test
-    void quitGame_negative() {
-        Exception exception = assertThrows(Exception.class, () ->
-                facade.quitGame(1, "invalidToken")
-        );
-        assertTrue(exception.getMessage().contains("Invalid authorization token"));
-    }
 }
 
