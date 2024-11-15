@@ -1,15 +1,15 @@
 package ui;
 
 import client.ServerFacade;
-import exception.ResponseException;
+import model.AuthData;
 
 import java.util.Scanner;
 
-public class PreloginClient {
+public class PreLoginClient {
     private final ServerFacade serverFacade;
     private final Scanner scanner;
 
-    public PreloginClient(ServerFacade serverFacade, Scanner scanner) {
+    public PreLoginClient(ServerFacade serverFacade, Scanner scanner) {
         this.serverFacade = serverFacade;
         this.scanner = scanner;
     }
@@ -23,7 +23,7 @@ public class PreloginClient {
                 switch (command) {
                     case "register" -> register();
                     case "login" -> {
-                        if (login()) return;  // Returns true if login is successful
+                        if (login()) return; // Transition to PostLoginClient on success
                     }
                     case "help" -> displayHelp();
                     case "quit" -> {
@@ -32,32 +32,33 @@ public class PreloginClient {
                     }
                     default -> System.out.println("Invalid command. Type 'help' for a list of commands.");
                 }
-            } catch (ResponseException e) {
-                System.out.println(e.getMessage());
+            } catch (Exception e) {
+                System.out.println("An error occurred: " + e.getMessage());
             }
         }
     }
 
-    private void register() throws ResponseException {
+    private void register() throws Exception {
         System.out.print("Username: ");
         String username = scanner.nextLine();
         System.out.print("Password: ");
         String password = scanner.nextLine();
-
+        System.out.print("Email: ");
         String email = scanner.nextLine();
-        serverFacade.register(username, password, email);
-        System.out.println("Successfully registered. You can now log in.");
+
+        AuthData authData = serverFacade.register(username, password, email);
+        System.out.println("Registration successful. You can now log in as " + username);
     }
 
-    private boolean login() throws ResponseException {
+    private boolean login() throws Exception {
         System.out.print("Username: ");
         String username = scanner.nextLine();
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
-        serverFacade.login(username, password);
-        System.out.println("Successfully logged in.");
-        return true; // Indicates successful login and a switch to PostLoginClient
+        AuthData authData = serverFacade.login(username, password);
+        System.out.println("Successfully logged in as " + username);
+        return true; // Transition to PostLoginClient
     }
 
     private void displayHelp() {
@@ -68,3 +69,4 @@ public class PreloginClient {
         System.out.println("- quit: Exit the program");
     }
 }
+

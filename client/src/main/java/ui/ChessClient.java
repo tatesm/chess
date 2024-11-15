@@ -1,11 +1,15 @@
 package ui;
 
+import chess.ChessGame;
+import chess.ChessPiece;
 import client.ServerFacade;
 
 import java.util.Scanner;
 
 public class ChessClient {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+        var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);
+        System.out.println("♕ 240 Chess Client: " + piece);
         var serverUrl = "http://localhost:8080";
         if (args.length == 1) {
             serverUrl = args[0];
@@ -15,20 +19,21 @@ public class ChessClient {
         var serverFacade = new ServerFacade(serverUrl);
 
         while (true) {
-            // Start in the PreloginClient
-            PreloginClient preloginClient = new PreloginClient(serverFacade, scanner);
+
+            PreLoginClient preloginClient = new PreLoginClient(serverFacade, scanner);
             preloginClient.run();
 
-            // After successful login, enter PostLoginClient
             PostLoginClient postLoginClient = new PostLoginClient(serverFacade, scanner);
             postLoginClient.run();
 
-            // If playing a game, enter GameClient
             int gameId = postLoginClient.getJoinedGameId();
-            if (gameId != -1) { // Example check if a game has been joined
-                GameClient gameClient = new GameClient(serverFacade, scanner, gameId);
+            String authToken = postLoginClient.getAuthToken(); // Retrieve authToken
+
+            if (gameId != -1 && authToken != null) {
+                GameClient gameClient = new GameClient(serverFacade, scanner, gameId, authToken); // Pass authToken
                 gameClient.run();
             }
         }
     }
 }
+

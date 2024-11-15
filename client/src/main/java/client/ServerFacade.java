@@ -1,83 +1,201 @@
 package client;
 
+import com.google.gson.reflect.TypeToken;
+import created.CreatedStuff;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
-import dataaccess.*;
-import service.UserService;
+import com.google.gson.Gson;
+
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.List;
 
 public class ServerFacade {
 
-    private final GameDAO gameDAO;
-    private final UserService userService; // Use UserService for user-related tasks
-    private final AuthTokenDAO authTokenDAO; // Singleton instance of AuthTokenDAO
+    private final String serverUrl;
+    private final Gson gson;
 
     public ServerFacade(String serverUrl) {
-        // Assume DatabaseManager handles connection setup using serverUrl
-        this.gameDAO = new GameDAO();
-        this.userService = new UserService(new UserDAO(), AuthTokenDAO.getInstance()); // Inject singleton AuthTokenDAO into UserService
-        this.authTokenDAO = AuthTokenDAO.getInstance(); // Use singleton instance
+        this.serverUrl = serverUrl; // Base URL for the server
+        this.gson = new Gson();
     }
 
-    public AuthData register(String username, String password, String email) throws DataAccessException {
-        UserData newUser = new UserData(username, password, email);
-        return userService.register(newUser); // Delegate registration to UserService
-    }
+    public AuthData register(String username, String password, String email) throws Exception {
+        URL url = new URL(serverUrl + "/user");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setDoOutput(true);
 
-    public AuthData login(String username, String password) throws DataAccessException {
-        UserData loginAttempt = new UserData(username, password, null);
-        return userService.login(loginAttempt); // Delegate login to UserService
-    }
+        UserData userData = new UserData(username, password, email);
+        String requestBody = gson.toJson(userData);
 
-    public void logout(String authToken) throws DataAccessException {
-        // Deletes the token using the singleton AuthTokenDAO
-        authTokenDAO.deleteAuth(authToken);
-    }
-
-    public GameData createGame(String gameName) throws DataAccessException {
-        ChessGame newGame = new ChessGame(); // Assuming ChessGame has a default constructor
-        GameData gameData = new GameData(0, gameName, newGame); // ID will be auto-generated in database
-        gameDAO.insertGame(gameData);
-        return gameDAO.getGameByName(gameName);
-    }
-
-    public GameData getGame(int gameId) throws DataAccessException {
-        return gameDAO.getGameById(gameId);
-    }
-
-    public List<GameData> listGames() throws DataAccessException {
-        return gameDAO.getAllGames();
-    }
-
-    public void joinGame(int gameId, String username, String color) throws DataAccessException {
-        GameData game = gameDAO.getGameById(gameId);
-        if (color.equalsIgnoreCase("white")) {
-            game.setWhiteUsername(username);
-        } else if (color.equalsIgnoreCase("black")) {
-            game.setBlackUsername(username);
-        } else {
-            throw new DataAccessException("Invalid color choice. Choose 'white' or 'black'.");
+        try (OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream())) {
+            writer.write(requestBody);
+            writer.flush();
         }
-        gameDAO.updateGame(game);
+
+        handleError(connection);
+
+        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
+            return gson.fromJson(reader, AuthData.class); // Return AuthData object on success
+        }
     }
 
-    public void observeGame(int gameId, String username) throws DataAccessException {
-        System.out.println(username + " is now observing game " + gameId);
-        // Add observer functionality here if supported by GameData
+    public AuthData login(String username, String password) throws Exception {
+        URL url = new URL(serverUrl + "/session");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setDoOutput(true);
+
+        UserData loginData = new UserData(username, password, null);
+        String requestBody = gson.toJson(loginData);
+
+        try (OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream())) {
+            writer.write(requestBody);
+            writer.flush();
+        }
+
+        handleError(connection);
+
+        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
+            return gson.fromJson(reader, AuthData.class);
+        }
     }
 
-    public String help() {
-        return """
-                Available commands:
-                - register <username> <password> <email>
-                - login <username> <password>
-                - logout
-                - creategame <game name>
-                - listgames
-                - playgame <game ID> <white|black>
-                - observegame <game ID>
-                """;
+    public List<GameData> listGames(String authToken) throws Exception {
+        URL url = new URL(serverUrl + "/game");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Authorization", authToken);
+        handleError(connection);
+
+        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
+            return gson.fromJson(reader, new TypeToken<List<GameData>>() {
+            }.getType());
+        }
+    }
+
+    public GameData createGame(String authToken, String gameName, String playerColor) throws Exception {
+        URL url = new URL(serverUrl + "/game");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty("Authorization", authToken);
+        connection.setDoOutput(true);
+
+        String requestBody = gson.toJson(new CreatedStuff.CreateGameRequest(gameName, playerColor, "username"));
+        try (OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream())) {
+            writer.write(requestBody);
+            writer.flush();
+        }
+
+        handleError(connection);
+
+        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
+            return gson.fromJson(reader, GameData.class);
+        }
+    }
+
+    public void joinGame(String authToken, int gameId, String playerColor) throws Exception {
+        URL url = new URL(serverUrl + "/game");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("PUT");
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty("Authorization", authToken);
+        connection.setDoOutput(true);
+
+        String requestBody = gson.toJson(new CreatedStuff.JoinGameRequest(gameId, playerColor));
+        try (OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream())) {
+            writer.write(requestBody);
+            writer.flush();
+        }
+
+        handleError(connection);
+
+        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
+            reader.read(); // Consume response to ensure proper resource release
+        }
+    }
+
+    public void makeMove(int gameId, String move, String authToken) throws Exception {
+        URL url = new URL(serverUrl + "/game/" + gameId + "/move");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty("Authorization", authToken);  // Include auth token for security
+        connection.setDoOutput(true);
+
+        // Create JSON request with move details
+        String requestBody = gson.toJson(move);
+        try (OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream())) {
+            writer.write(requestBody);
+            writer.flush();
+        }
+
+        handleError(connection);
+
+        // Optional: read the server's response (even if empty) to release resources
+        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
+            reader.read();  // Just consume response to ensure connection resources are released
+        }
+    }
+
+
+    public String getBoard(int gameId) throws Exception {
+        URL url = new URL(serverUrl + "/game/" + gameId + "/board");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        handleError(connection);
+
+        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
+            return gson.fromJson(reader, String.class);
+        }
+    }
+
+    public void quitGame(int gameId) throws Exception {
+        URL url = new URL(serverUrl + "/game/" + gameId + "/quit");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("DELETE");
+        handleError(connection);
+
+        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
+            reader.read(); // Consume response to ensure connection closes
+        }
+    }
+
+    public void observeGame(String authToken, int gameId) throws Exception {
+        URL url = new URL(serverUrl + "/game/" + gameId + "/observe");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Authorization", authToken); // Set the authorization token
+        handleError(connection);
+
+        // Optional: Read the response (if any) to ensure the connection closes properly
+        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
+            reader.read(); // Simply consume the response
+        }
+    }
+
+    public void logout(String authToken) throws Exception {
+        URL url = new URL(serverUrl + "/session");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("DELETE");
+        connection.setRequestProperty("Authorization", authToken);
+        handleError(connection);
+    }
+
+    private void handleError(HttpURLConnection connection) throws Exception {
+        if (connection.getResponseCode() >= 400) {
+            try (InputStreamReader reader = new InputStreamReader(connection.getErrorStream())) {
+                String errorResponse = gson.fromJson(reader, String.class);
+                throw new Exception("Error: " + errorResponse);
+            }
+        }
     }
 }
-
 

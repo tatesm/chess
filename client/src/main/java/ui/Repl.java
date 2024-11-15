@@ -1,7 +1,8 @@
 package ui;
 
-import ServerFacade.java;
 import client.ServerFacade;
+import model.AuthData;
+import model.GameData;
 
 import java.util.Scanner;
 
@@ -10,6 +11,8 @@ public class Repl {
     private final ServerFacade serverFacade;
     private boolean loggedIn = false;
     private boolean inGame = false;
+    private String authToken;  // Store authToken after login
+    private int currentGameId = -1;
 
     public Repl(String serverUrl) {
         this.serverFacade = new ServerFacade(serverUrl);
@@ -28,8 +31,7 @@ public class Repl {
     }
 
     private void preLoginLoop() {
-        boolean continueLoop = true;
-        while (continueLoop && !loggedIn) {
+        while (!loggedIn) {
             System.out.println("Pre-login commands: help, login, register, quit");
             System.out.print("Enter command: ");
             String command = scanner.nextLine().trim().toLowerCase();
@@ -44,13 +46,11 @@ public class Repl {
                 }
                 default -> System.out.println("Invalid command. Type 'help' for a list of commands.");
             }
-            continueLoop = !loggedIn;  // Exit loop if logged in
         }
     }
 
     private void postLoginLoop() {
-        boolean continueLoop = true;
-        while (continueLoop && loggedIn && !inGame) {
+        while (loggedIn && !inGame) {
             System.out.println("Post-login commands: help, logout, create game, list games, play game, observe game");
             System.out.print("Enter command: ");
             String command = scanner.nextLine().trim().toLowerCase();
@@ -64,13 +64,11 @@ public class Repl {
                 case "observe game" -> observeGame();
                 default -> System.out.println("Invalid command. Type 'help' for a list of commands.");
             }
-            continueLoop = loggedIn && !inGame;  // Exit loop if logged out or in a game
         }
     }
 
     private void gameplayLoop() {
-        boolean continueLoop = true;
-        while (continueLoop && inGame) {
+        while (inGame) {
             System.out.println("Gameplay commands: move, exit game");
             System.out.print("Enter command: ");
             String command = scanner.nextLine().trim().toLowerCase();
@@ -80,7 +78,6 @@ public class Repl {
                 case "exit game" -> exitGame();
                 default -> System.out.println("Invalid command. Type 'move' or 'exit game'.");
             }
-            continueLoop = inGame;  // Exit loop if the user exits the game
         }
     }
 
@@ -97,11 +94,17 @@ public class Repl {
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
-        if (serverFacade.login(username, password)) {
-            loggedIn = true;
-            System.out.println("Login successful.");
-        } else {
-            System.out.println("Login failed. Check your username and password.");
+        try {
+            AuthData authData = serverFacade.login(username, password);
+            if (authData != null) {
+                loggedIn = true;
+                authToken = authData.authToken(); // Save auth token for further requests
+                System.out.println("Login successful.");
+            } else {
+                System.out.println("Login failed. Check your username and password.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error during login: " + e.getMessage());
         }
     }
 
@@ -113,77 +116,119 @@ public class Repl {
         System.out.print("Email: ");
         String email = scanner.nextLine();
 
-        if (serverFacade.register(username, password, email)) {
-            loggedIn = true;
-            System.out.println("Registration successful.");
-        } else {
-            System.out.println("Registration failed. Try a different username.");
+        try {
+            AuthData authData = serverFacade.register(username, password, email);
+            if (authData != null) {
+                loggedIn = true;
+                authToken = authData.authToken();
+                System.out.println("Registration successful.");
+            } else {
+                System.out.println("Registration failed. Try a different username.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error during registration: " + e.getMessage());
         }
     }
 
     private void logout() {
-        serverFacade.logout();
-        loggedIn = false;
-        System.out.println("Logged out successfully.");
+        try {
+            serverFacade.logout(authToken);
+            loggedIn = false;
+            authToken = null;
+            System.out.println("Logged out successfully.");
+        } catch (Exception e) {
+            System.out.println("Error during logout: " + e.getMessage());
+        }
     }
 
     private void createGame() {
         System.out.print("Enter a name for the new game: ");
         String gameName = scanner.nextLine();
-        if (serverFacade.createGame(gameName)) {
-            System.out.println("Game created successfully.");
-        } else {
-            System.out.println("Failed to create game.");
+        System.out.print("Choose color (white or black): ");
+        String playerColor = scanner.nextLine().trim().toLowerCase();
+
+        if (!playerColor.equals("white") && !playerColor.equals("black")) {
+            System.out.println("Invalid color. Please choose 'white' or 'black'.");
+            return;
+        }
+
+        try {
+            GameData gameData = serverFacade.createGame(authToken, gameName, playerColor);  // Create game
+            currentGameId = gameData.getGameID();  // Set the currentGameId for the created game
+            inGame = true;
+            System.out.println("Game created successfully. You are now in the game.");
+        } catch (Exception e) {
+            System.out.println("Error creating game: " + e.getMessage());
         }
     }
 
     private void listGames() {
-        var games = serverFacade.listGames();
-        if (games.isEmpty()) {
-            System.out.println("No games available.");
-        } else {
-            System.out.println("Available games:");
-            for (int i = 0; i < games.size(); i++) {
-                System.out.println((i + 1) + ": " + games.get(i));
+        try {
+            var games = serverFacade.listGames(authToken);
+            if (games.isEmpty()) {
+                System.out.println("No games available.");
+            } else {
+                System.out.println("Available games:");
+                for (int i = 0; i < games.size(); i++) {
+                    System.out.println((i + 1) + ": " + games.get(i));
+                }
             }
+        } catch (Exception e) {
+            System.out.println("Error listing games: " + e.getMessage());
         }
     }
 
     private void playGame() {
         System.out.print("Enter game number to play: ");
-        int gameNumber = Integer.parseInt(scanner.nextLine().trim());
-        if (serverFacade.joinGame(gameNumber, "play")) {
+        int gameId = Integer.parseInt(scanner.nextLine().trim());
+        System.out.print("Choose color (white or black): ");
+        String playerColor = scanner.nextLine().trim().toLowerCase();
+
+        if (!playerColor.equals("white") && !playerColor.equals("black")) {
+            System.out.println("Invalid color. Please choose 'white' or 'black'.");
+            return;
+        }
+
+        try {
+            serverFacade.joinGame(authToken, gameId, playerColor);  // Join game with token, gameId, and color
+            currentGameId = gameId;  // Set the currentGameId after successfully joining
             inGame = true;
             System.out.println("Joined game. Ready to play.");
-        } else {
-            System.out.println("Failed to join game.");
+        } catch (Exception e) {
+            System.out.println("Error joining game: " + e.getMessage());
         }
     }
 
     private void observeGame() {
         System.out.print("Enter game number to observe: ");
-        int gameNumber = Integer.parseInt(scanner.nextLine().trim());
-        if (serverFacade.joinGame(gameNumber, "observe")) {
+        int gameId = Integer.parseInt(scanner.nextLine().trim());
+
+        try {
+            serverFacade.observeGame(authToken, gameId);
             inGame = true;
             System.out.println("Observing game.");
-        } else {
-            System.out.println("Failed to observe game.");
+        } catch (Exception e) {
+            System.out.println("Error observing game: " + e.getMessage());
         }
     }
 
     private void makeMove() {
         System.out.print("Enter your move (e.g., e2 e4): ");
         String move = scanner.nextLine();
-        if (serverFacade.makeMove(move)) {
+
+        try {
+            serverFacade.makeMove(currentGameId, move, authToken); // Provide gameId, move, and authToken
             System.out.println("Move accepted.");
-        } else {
-            System.out.println("Invalid move.");
+        } catch (Exception e) {
+            System.out.println("Invalid move: " + e.getMessage());
         }
     }
+
 
     private void exitGame() {
         inGame = false;
         System.out.println("Exited game.");
     }
 }
+
 

@@ -1,82 +1,85 @@
-package client;
+package dataaccess;
 
 import model.AuthData;
-import model.GameData;
-import model.UserData;
-import dataaccess.*;
-import service.UserService;
 
-public class ServerFacade {
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-    private final GameDAO gameDAO;
-    private final UserService userService; // Use UserService for user-related tasks
-    private final AuthTokenDAO authTokenDAO; // Singleton instance of AuthTokenDAO
+public class AuthTokenDAO {
 
-    public ServerFacade(String serverUrl) {
-        // Assume DatabaseManager handles connection setup using serverUrl
-        this.gameDAO = new GameDAO();
-        this.userService = new UserService(new UserDAO(), AuthTokenDAO.getInstance()); // Inject singleton AuthTokenDAO into UserService
-        this.authTokenDAO = AuthTokenDAO.getInstance(); // Use singleton instance
+    private static final AuthTokenDAO INSTANCE = new AuthTokenDAO();
+
+    private AuthTokenDAO() {
     }
 
-    public AuthData register(String username, String password, String email) throws DataAccessException {
-        UserData newUser = new UserData(username, password, email);
-        return userService.register(newUser); // Delegate registration to UserService
+    public static AuthTokenDAO getInstance() {
+        return INSTANCE;
     }
 
-    public AuthData login(String username, String password) throws DataAccessException {
-        UserData loginAttempt = new UserData(username, password, null);
-        return userService.login(loginAttempt); // Delegate login to UserService
-    }
+    public void createAuth(AuthData authData) throws DataAccessException {
+        String sql = "INSERT INTO auth_tokens (token, username) VALUES (?, ?);";
 
-    public void logout(String authToken) throws DataAccessException {
-        // Deletes the token using the singleton AuthTokenDAO
-        authTokenDAO.deleteAuth(authToken);
-    }
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, authData.authToken());
+            stmt.setString(2, authData.username());
 
-    public GameData createGame(String gameName) throws DataAccessException {
-        ChessGame newGame = new ChessGame(); // Assuming ChessGame has a default constructor
-        GameData gameData = new GameData(0, gameName, newGame); // ID will be auto-generated in database
-        gameDAO.insertGame(gameData);
-        return gameDAO.getGameByName(gameName);
-    }
-
-    public GameData getGame(int gameId) throws DataAccessException {
-        return gameDAO.getGameById(gameId);
-    }
-
-    public List<GameData> listGames() throws DataAccessException {
-        return gameDAO.getAllGames();
-    }
-
-    public void joinGame(int gameId, String username, String color) throws DataAccessException {
-        GameData game = gameDAO.getGameById(gameId);
-        if (color.equalsIgnoreCase("white")) {
-            game.setWhiteUsername(username);
-        } else if (color.equalsIgnoreCase("black")) {
-            game.setBlackUsername(username);
-        } else {
-            throw new DataAccessException("Invalid color choice. Choose 'white' or 'black'.");
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            if (e.getErrorCode() == 1062) {
+                throw new DataAccessException("Token already exists: " + authData.authToken());
+            } else {
+                throw new DataAccessException("Error creating token: " + e.getMessage());
+            }
         }
-        gameDAO.updateGame(game);
     }
 
-    public void observeGame(int gameId, String username) throws DataAccessException {
-        System.out.println(username + " is now observing game " + gameId);
-        // Add observer functionality here if supported by GameData
+    public AuthData getAuth(String authToken) throws DataAccessException {
+        String sql = "SELECT * FROM auth_tokens WHERE token = ?;";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, authToken);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String username = rs.getString("username");
+                    return new AuthData(authToken, username);
+                }
+            }
+
+            return null;
+
+        } catch (SQLException e) {
+            throw new DataAccessException("Error retrieving auth token: " + authToken + " - " + e.getMessage());
+        }
     }
 
-    public String help() {
-        return """
-                Available commands:
-                - register <username> <password> <email>
-                - login <username> <password>
-                - logout
-                - creategame <game name>
-                - listgames
-                - playgame <game ID> <white|black>
-                - observegame <game ID>
-                """;
+    public void deleteAuth(String authToken) throws DataAccessException {
+        String sql = "DELETE FROM auth_tokens WHERE token = ?;";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, authToken);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Error deleting auth token: " + authToken + " - " + e.getMessage());
+        }
+    }
+
+    public void clearAuthTokens() throws DataAccessException {
+        String sql = "DELETE FROM auth_tokens;";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Error clearing auth tokens" + e.getMessage());
+        }
     }
 }
+
 

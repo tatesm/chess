@@ -2,7 +2,7 @@ package ui;
 
 public class chessdoing {
     public void drawChessBoard(boolean isWhiteBottom) {
-        System.out.print(EscapeSequences.ERASE_SCREEN);  // Clears the screen for a fresh draw
+        System.out.print(EscapeSequences.ERASE_SCREEN);
 
         String[][] board = {
                 {EscapeSequences.BLACK_ROOK, EscapeSequences.BLACK_KNIGHT, EscapeSequences.BLACK_BISHOP, EscapeSequences.BLACK_QUEEN,
