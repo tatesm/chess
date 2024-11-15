@@ -37,8 +37,7 @@ public class PreLoginClient {
                         register();
                     }
                     case "login" -> {
-                        boolean isLoggedIn = login();
-                        if (isLoggedIn) {
+                        if (login()) {
                             return; // Exit to proceed to post-login
                         }
                     }
@@ -58,6 +57,7 @@ public class PreLoginClient {
             }
         }
     }
+
 
     /**
      * Prompts the user for registration details and attempts to register a new account.

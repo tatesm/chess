@@ -21,29 +21,55 @@ public class PostLoginClient {
 
     public void run() {
         while (true) {
-            System.out.print("Enter command (create game, list games, play game, observe game, logout, help): ");
-            String command = scanner.nextLine().trim().toLowerCase();
+            String command = getUserCommand();
 
             try {
-                switch (command) {
-                    case "create game" -> createGame();
-                    case "list games" -> listGames();
-                    case "play game" -> {
-                        if (playGame()) return;
-                    }
-                    case "observe game" -> observeGame();
-                    case "logout" -> {
-                        logout();
-                        return;
-                    }
-                    case "help" -> displayHelp();
-                    default -> System.out.println("Invalid command. Type 'help' for a list of commands.");
-                }
+                processCommand(command);
             } catch (Exception e) {
-                System.out.println("An error occurred. Please try again.");
+                handleError(e);
             }
         }
     }
+
+    private String getUserCommand() {
+        System.out.print("Enter command (create game, list games, play game, observe game, logout, help): ");
+        return scanner.nextLine().trim().toLowerCase();
+    }
+
+    private void processCommand(String command) throws Exception {
+        switch (command) {
+            case "create game" -> {
+                createGame();
+            }
+            case "list games" -> {
+                listGames();
+            }
+            case "play game" -> {
+                if (playGame()) {
+                    return; // Exit while loop
+                }
+            }
+            case "observe game" -> {
+                observeGame();
+            }
+            case "logout" -> {
+                logout();
+                return; // Exit while loop
+            }
+            case "help" -> {
+                displayHelp();
+            }
+            default -> {
+                System.out.println("Invalid command. Type 'help' for a list of commands.");
+            }
+        }
+    }
+
+    private void handleError(Exception e) {
+        System.err.println("An error occurred. Please try again.");
+        e.printStackTrace(); // Log stack trace for debugging
+    }
+
 
     public int getJoinedGameId() {
         return joinedGameId;
