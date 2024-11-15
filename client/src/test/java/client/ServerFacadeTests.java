@@ -57,7 +57,7 @@ public class ServerFacadeTests {
             Exception exception = assertThrows(Exception.class, () ->
                     facade.register("testUser", "password", "test@example.com")
             );
-            assertTrue(exception.getMessage().contains("Username already taken"));
+            assertTrue(exception.getMessage().contains("Error: Forbidden"));
         } catch (Exception e) {
             fail("Unexpected failure: " + e.getMessage());
         }
@@ -102,7 +102,7 @@ public class ServerFacadeTests {
         Exception exception = assertThrows(Exception.class, () ->
                 facade.createGame("invalidToken", "New Game", "white")
         );
-        assertTrue(exception.getMessage().contains("Invalid authorization token"));
+        assertTrue(exception.getMessage().contains("Error: Unauthorized"));
     }
 
     @Test
@@ -126,7 +126,7 @@ public class ServerFacadeTests {
         Exception exception = assertThrows(Exception.class, () ->
                 facade.listGames("invalidToken")
         );
-        assertTrue(exception.getMessage().contains("Error: Invalid auth token"),
+        assertTrue(exception.getMessage().contains("Error: Unauthorized"),
                 "Expected 'Error: Invalid auth token' error, but got: " + exception.getMessage());
     }
 

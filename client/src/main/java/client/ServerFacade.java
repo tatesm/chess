@@ -116,7 +116,7 @@ public class ServerFacade {
         }
     }
 
-   
+
     public void joinGame(String authToken, int gameID, String playerColor) throws Exception {
         URL url = new URL(serverUrl + "/game"); // Ensure correct endpoint
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -239,7 +239,7 @@ public class ServerFacade {
     private void handleError(HttpURLConnection connection) throws Exception {
         if (connection.getResponseCode() >= 400) {
             try (InputStreamReader reader = new InputStreamReader(connection.getErrorStream())) {
-                String errorResponse = gson.fromJson(reader, String.class);
+                String errorResponse = connection.getResponseMessage();
                 throw new Exception("Error: " + errorResponse);
             }
         }
