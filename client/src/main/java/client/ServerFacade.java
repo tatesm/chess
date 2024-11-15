@@ -146,27 +146,28 @@ public class ServerFacade {
     }
 
 
-    public String getBoard(int gameId) throws Exception {
+    public String getBoard(int gameId, String authToken) throws Exception {
         URL url = new URL(serverUrl + "/game/" + gameId + "/board");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
-        handleError(connection);
+        connection.setRequestProperty("Authorization", authToken);  // Pass authToken in header
+
+        handleError(connection); // Method to handle errors
 
         try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
-            return gson.fromJson(reader, String.class);
+            return gson.fromJson(reader, String.class);  // Assuming board is returned as JSON string
         }
     }
 
-    public void quitGame(int gameId) throws Exception {
+    public void quitGame(int gameId, String authToken) throws Exception {
         URL url = new URL(serverUrl + "/game/" + gameId + "/quit");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("DELETE");
-        handleError(connection);
+        connection.setRequestProperty("Authorization", authToken);  // Pass authToken in header
 
-        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
-            reader.read(); // Consume response to ensure connection closes
-        }
+        handleError(connection); // Method to handle errors
     }
+
 
     public void observeGame(String authToken, int gameId) throws Exception {
         URL url = new URL(serverUrl + "/game/" + gameId + "/observe");
