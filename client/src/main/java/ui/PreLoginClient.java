@@ -69,7 +69,7 @@ public class PreLoginClient {
 
     private void handleError(Exception e) {
         System.err.println("An unexpected error occurred while processing your command.");
-        e.printStackTrace();
+        System.out.println(e.getMessage());
     }
 
 

@@ -18,7 +18,7 @@ public class Base {
                 }
             } catch (Exception e) {
                 System.err.println("An error occurred. Please try again.");
-                e.printStackTrace();
+                System.out.println(e.getMessage());
             }
         }
     }
