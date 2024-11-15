@@ -28,34 +28,50 @@ public class PreLoginClient {
      */
     public void run() {
         while (true) {
-            System.out.print("Enter command (register, login, help, quit): ");
-            String command = scanner.nextLine().trim().toLowerCase();
+            String command = getUserCommand();
 
             try {
-                switch (command) {
-                    case "register" -> {
-                        register();
-                    }
-                    case "login" -> {
-                        if (login()) {
-                            return; // Exit to proceed to post-login
-                        }
-                    }
-                    case "help" -> {
-                        displayHelp();
-                    }
-                    case "quit" -> {
-                        exitProgram();
-                    }
-                    default -> {
-                        System.out.println("Invalid command. Type 'help' for a list of commands.");
-                    }
+                if (processCommand(command)) {
+                    return; // Exit the method if needed
                 }
             } catch (Exception e) {
-                System.err.println("An unexpected error occurred while processing your command.");
-                e.printStackTrace();
+                handleError(e);
             }
         }
+    }
+
+    private String getUserCommand() {
+        System.out.print("Enter command (register, login, help, quit): ");
+        return scanner.nextLine().trim().toLowerCase();
+    }
+
+    private boolean processCommand(String command) throws Exception {
+        switch (command) {
+            case "register" -> {
+                register();
+            }
+            case "login" -> {
+                if (login()) {
+                    return true; // Exit to proceed to post-login
+                }
+            }
+            case "help" -> {
+                displayHelp();
+            }
+            case "quit" -> {
+                exitProgram();
+                return true; // Exit the loop
+            }
+            default -> {
+                System.out.println("Invalid command. Type 'help' for a list of commands.");
+            }
+        }
+        return false; // Continue the loop
+    }
+
+    private void handleError(Exception e) {
+        System.err.println("An unexpected error occurred while processing your command.");
+        e.printStackTrace();
     }
 
 
