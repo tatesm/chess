@@ -7,24 +7,28 @@ import java.util.Scanner;
 public class PostLoginClient {
     private final ServerFacade serverFacade;
     private final Scanner scanner;
-    private String authToken;
+    private final String authToken; // Use the passed authToken directly
     private int joinedGameId = -1;
 
-    public PostLoginClient(ServerFacade serverFacade, Scanner scanner) {
+    public PostLoginClient(ServerFacade serverFacade, Scanner scanner, String authToken) {
         this.serverFacade = serverFacade;
         this.scanner = scanner;
+        this.authToken = authToken;
     }
 
     public String getAuthToken() {
         return authToken;
     }
 
-    public void run() {
+    public String run() {
         while (true) {
             String command = getUserCommand();
 
             try {
-                processCommand(command);
+                String result = processCommand(command);
+                if (result != null) {
+                    return result;
+                }
             } catch (Exception e) {
                 handleError(e);
             }
@@ -36,40 +40,44 @@ public class PostLoginClient {
         return scanner.nextLine().trim().toLowerCase();
     }
 
-    private void processCommand(String command) throws Exception {
+    private String processCommand(String command) throws Exception {
         switch (command) {
             case "create game" -> {
                 createGame();
+                return "create game";
             }
             case "list games" -> {
                 listGames();
+                return "list games";
             }
             case "play game" -> {
                 if (playGame()) {
-                    return; // Exit while loop
+                    return "play game";
                 }
             }
             case "observe game" -> {
                 observeGame();
+                return "observe game";
             }
             case "logout" -> {
                 logout();
-                return; // Exit while loop
+                return "logout";
             }
             case "help" -> {
                 displayHelp();
+                return "help";
             }
             default -> {
                 System.out.println("Invalid command. Type 'help' for a list of commands.");
             }
         }
+        return null;
     }
 
     private void handleError(Exception e) {
         System.err.println("An error occurred. Please try again.");
-        e.printStackTrace(); // Log stack trace for debugging
+        e.printStackTrace();
     }
-
 
     public int getJoinedGameId() {
         return joinedGameId;
@@ -79,21 +87,14 @@ public class PostLoginClient {
         try {
             System.out.print("Enter game number: ");
             int gameId = Integer.parseInt(scanner.nextLine());
-            System.out.print("Choose color (white or black): ");
-            String color = scanner.nextLine().trim().toLowerCase();
-
-            if (!color.equals("white") && !color.equals("black")) {
-                System.out.println("Invalid color. Please choose 'white' or 'black'.");
-                return false;
+            String playerColor = chooseColor();
+            if (playerColor == null) {
+                return false; // User canceled the action
             }
 
-            // if need an authorization token to join a game
-            System.out.print("Enter authorization token: ");
-            String authToken = scanner.nextLine().trim();
-
-            serverFacade.joinGame(authToken, gameId, color);
+            serverFacade.joinGame(authToken, gameId, playerColor);
             joinedGameId = gameId;
-            System.out.println("Joined game #" + gameId + " as " + color + ". Transitioning to game view...");
+            System.out.println("Joined game #" + gameId + " as " + playerColor + ". Transitioning to game view...");
             return true;
         } catch (NumberFormatException e) {
             System.out.println("Invalid game ID. Please enter a valid number.");
@@ -107,17 +108,10 @@ public class PostLoginClient {
         try {
             System.out.print("Enter game name: ");
             String gameName = scanner.nextLine().trim();
-            System.out.print("Choose color (white or black): ");
-            String playerColor = scanner.nextLine().trim().toLowerCase();
-
-            if (!playerColor.equals("white") && !playerColor.equals("black")) {
-                System.out.println("Invalid color. Please choose 'white' or 'black'.");
-                return;
+            String playerColor = chooseColor();
+            if (playerColor == null) {
+                return; // User canceled the action
             }
-
-            // if need an authorization token to create a game
-            System.out.print("Enter authorization token: ");
-            String authToken = scanner.nextLine().trim();
 
             serverFacade.createGame(authToken, gameName, playerColor);
             System.out.println("Game '" + gameName + "' created successfully.");
@@ -128,10 +122,6 @@ public class PostLoginClient {
 
     private void listGames() {
         try {
-            // if need an authorization token to list games
-            System.out.print("Enter authorization token: ");
-            String authToken = scanner.nextLine().trim();
-
             System.out.println("Available games:");
             var gamesList = serverFacade.listGames(authToken);
             if (gamesList.isEmpty()) {
@@ -149,10 +139,6 @@ public class PostLoginClient {
             System.out.print("Enter game number to observe: ");
             int gameId = Integer.parseInt(scanner.nextLine());
 
-
-            System.out.print("Enter authorization token: ");
-            String authToken = scanner.nextLine().trim();
-
             serverFacade.observeGame(authToken, gameId);
             System.out.println("Observing game #" + gameId);
         } catch (NumberFormatException e) {
@@ -164,10 +150,6 @@ public class PostLoginClient {
 
     private void logout() {
         try {
-
-            System.out.print("Enter authorization token: ");
-            String authToken = scanner.nextLine().trim();
-
             serverFacade.logout(authToken);
             System.out.println("Successfully logged out.");
         } catch (Exception e) {
@@ -199,5 +181,6 @@ public class PostLoginClient {
         }
     }
 }
+
 
 

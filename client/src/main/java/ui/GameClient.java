@@ -32,26 +32,43 @@ public class GameClient {
     /**
      * Runs the main command loop for the game client.
      */
-    public void run() {
+    public String run() {
         while (true) {
             System.out.print("Enter command (move, display board, quit): ");
             String command = scanner.nextLine().trim().toLowerCase();
 
             try {
-                switch (command) {
-                    case "move" -> promptForMove();
-                    case "display board" -> displayCurrentBoard();
-                    case "quit" -> {
-                        exitGame();
-                        return;
-                    }
-                    default -> System.out.println("Unknown command. Please type 'move', 'display board', or 'quit'.");
+                String result = processCommand(command);
+                if (result != null && result.equals("quit")) {
+                    return "quit"; // Exit the game
                 }
             } catch (Exception e) {
                 System.out.println("An unexpected error occurred. Please try again.");
             }
         }
     }
+
+    private String processCommand(String command) throws Exception {
+        switch (command) {
+            case "move" -> {
+                promptForMove();
+                return "move";
+            }
+            case "display board" -> {
+                displayCurrentBoard();
+                return "display board";
+            }
+            case "quit" -> {
+                exitGame();
+                return "quit"; // Exit the loop
+            }
+            default -> {
+                System.out.println("Unknown command. Please type 'move', 'display board', or 'quit'.");
+            }
+        }
+        return null; // Continue the loop
+    }
+
 
     /**
      * Prompts the user for a move and attempts to make it on the server.
@@ -73,6 +90,7 @@ public class GameClient {
             System.out.println("Move failed. Check the move format and try again.");
         }
     }
+
 
     /**
      * Validates that the move follows a basic format.

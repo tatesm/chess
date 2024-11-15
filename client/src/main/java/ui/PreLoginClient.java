@@ -26,13 +26,14 @@ public class PreLoginClient {
     /**
      * Starts the main command loop for pre-login functionality.
      */
-    public void run() {
+    public String run() {
         while (true) {
             String command = getUserCommand();
 
             try {
-                if (processCommand(command)) {
-                    return; // Exit the method if needed
+                String result = processCommand(command);
+                if (result != null) {
+                    return result;
                 }
             } catch (Exception e) {
                 handleError(e);
@@ -45,28 +46,26 @@ public class PreLoginClient {
         return scanner.nextLine().trim().toLowerCase();
     }
 
-    private boolean processCommand(String command) throws Exception {
+    private String processCommand(String command) throws Exception {
         switch (command) {
             case "register" -> {
-                register();
+                return register();
             }
             case "login" -> {
-                if (login()) {
-                    return true; // Exit to proceed to post-login
-                }
+                return login();
             }
             case "help" -> {
                 displayHelp();
             }
             case "quit" -> {
                 exitProgram();
-                return true; // Exit the loop
+                return "quit"; // Exit the loop
             }
             default -> {
                 System.out.println("Invalid command. Type 'help' for a list of commands.");
             }
         }
-        return false; // Continue the loop
+        return null; // Continue the loop
     }
 
     private void handleError(Exception e) {
@@ -78,7 +77,7 @@ public class PreLoginClient {
     /**
      * Prompts the user for registration details and attempts to register a new account.
      */
-    private void register() throws Exception {
+    public String register() throws Exception {
         System.out.print("Username: ");
         String username = scanner.nextLine();
         System.out.print("Password: ");
@@ -87,7 +86,16 @@ public class PreLoginClient {
         String email = scanner.nextLine();
 
         AuthData authData = serverFacade.register(username, password, email);
-        System.out.println("Registration successful! You can now log in with username: " + username);
+        if (
+                authData != null
+        ) {
+            System.out.println("Registration successful! You can now log in with username: " + username);
+
+            return authData.authToken();
+        } else {
+            return null;
+        }
+
     }
 
     /**
@@ -95,15 +103,23 @@ public class PreLoginClient {
      *
      * @return true if login is successful, triggering exit to PostLoginClient
      */
-    private boolean login() throws Exception {
+    public String login() throws Exception {
         System.out.print("Username: ");
         String username = scanner.nextLine();
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
         AuthData authData = serverFacade.login(username, password);
-        System.out.println("Welcome, " + username + "! You are now logged in.");
-        return true; // Exit loop to proceed to PostLoginClient
+        if (
+                authData != null
+        ) {
+            System.out.println("Welcome, " + username + "! You are now logged in.");
+
+            return authData.authToken();
+        } else {
+            return null;
+        }
+        // Exit loop to proceed to PostLoginClient
     }
 
     /**
