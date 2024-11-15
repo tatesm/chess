@@ -33,30 +33,42 @@ public class GameClient {
                     default -> System.out.println("Invalid command. Type 'move', 'display board', or 'quit game'.");
                 }
             } catch (Exception e) {
-                System.out.println("An error occurred: " + e.getMessage());
+                System.out.println("An error occurred. Please try again.");
             }
         }
     }
 
-    private void makeMove() throws Exception {
+    private void makeMove() {
         System.out.print("Enter your move (e.g., e2 e4): ");
         String move = scanner.nextLine();
-        serverFacade.makeMove(gameId, move, authToken);  // Pass authToken as the third argument
-        System.out.println("Move made.");
-        displayInitialBoard(); // Refresh board after move
+        try {
+            serverFacade.makeMove(gameId, move, authToken);
+            System.out.println("Move made successfully.");
+            displayInitialBoard(); // Refresh board after move
+        } catch (Exception e) {
+            System.out.println("Invalid move or server error. Please ensure move format is correct and try again.");
+        }
     }
 
-    private void displayInitialBoard() throws Exception {
+    private void displayInitialBoard() {
         System.out.println("Current board:");
-        // Fetch the board's state from the server and display it
-        String board = serverFacade.getBoard(gameId, authToken);  // Ensure authToken is passed
-        System.out.println(board);
+        try {
+            String board = serverFacade.getBoard(gameId, authToken);
+            System.out.println(board);
+        } catch (Exception e) {
+            System.out.println("Could not retrieve board. Please try again.");
+        }
     }
 
-    private void quitGame() throws Exception {
-        serverFacade.quitGame(gameId, authToken);  // Pass authToken as the second argument
-        System.out.println("Exited game #" + gameId);
+    private void quitGame() {
+        try {
+            serverFacade.quitGame(gameId, authToken);
+            System.out.println("Exited game #" + gameId);
+        } catch (Exception e) {
+            System.out.println("Error exiting game. Please try again.");
+        }
     }
 }
+
 
 

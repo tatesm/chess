@@ -7,7 +7,7 @@ import java.util.Scanner;
 public class PostLoginClient {
     private final ServerFacade serverFacade;
     private final Scanner scanner;
-    private String authToken;  // Store authToken here
+    private String authToken;
     private int joinedGameId = -1;
 
     public PostLoginClient(ServerFacade serverFacade, Scanner scanner) {
@@ -29,18 +29,18 @@ public class PostLoginClient {
                     case "create game" -> createGame();
                     case "list games" -> listGames();
                     case "play game" -> {
-                        if (playGame()) return; // Transition to GameClient if successful
+                        if (playGame()) return;
                     }
                     case "observe game" -> observeGame();
                     case "logout" -> {
                         logout();
-                        return; // Return to PreloginClient after logout
+                        return;
                     }
                     case "help" -> displayHelp();
                     default -> System.out.println("Invalid command. Type 'help' for a list of commands.");
                 }
             } catch (Exception e) {
-                System.out.println("An error occurred: " + e.getMessage());
+                System.out.println("An error occurred. Please try again.");
             }
         }
     }
@@ -61,18 +61,18 @@ public class PostLoginClient {
                 return false;
             }
 
-            // Assuming you need an authorization token to join a game
+            // if need an authorization token to join a game
             System.out.print("Enter authorization token: ");
             String authToken = scanner.nextLine().trim();
 
             serverFacade.joinGame(authToken, gameId, color);
-            joinedGameId = gameId; // Set joinedGameId if successful
+            joinedGameId = gameId;
             System.out.println("Joined game #" + gameId + " as " + color + ". Transitioning to game view...");
             return true;
         } catch (NumberFormatException e) {
             System.out.println("Invalid game ID. Please enter a valid number.");
         } catch (Exception e) {
-            System.out.println("Failed to join game: " + e.getMessage());
+            System.out.println("Failed to join game. Please try again.");
         }
         return false;
     }
@@ -89,20 +89,20 @@ public class PostLoginClient {
                 return;
             }
 
-            // Assuming you need an authorization token to create a game
+            // if need an authorization token to create a game
             System.out.print("Enter authorization token: ");
             String authToken = scanner.nextLine().trim();
 
             serverFacade.createGame(authToken, gameName, playerColor);
             System.out.println("Game '" + gameName + "' created successfully.");
         } catch (Exception e) {
-            System.out.println("Failed to create game: " + e.getMessage());
+            System.out.println("Failed to create game. Please try again.");
         }
     }
 
     private void listGames() {
         try {
-            // Assuming you need an authorization token to list games
+            // if need an authorization token to list games
             System.out.print("Enter authorization token: ");
             String authToken = scanner.nextLine().trim();
 
@@ -114,7 +114,7 @@ public class PostLoginClient {
                 gamesList.forEach(game -> System.out.println("- " + game));
             }
         } catch (Exception e) {
-            System.out.println("Failed to retrieve game list: " + e.getMessage());
+            System.out.println("Failed to retrieve game list. Please try again.");
         }
     }
 
@@ -132,7 +132,7 @@ public class PostLoginClient {
         } catch (NumberFormatException e) {
             System.out.println("Invalid game ID. Please enter a valid number.");
         } catch (Exception e) {
-            System.out.println("Failed to observe game: " + e.getMessage());
+            System.out.println("Failed to observe game. Please try again.");
         }
     }
 
@@ -145,7 +145,7 @@ public class PostLoginClient {
             serverFacade.logout(authToken);
             System.out.println("Successfully logged out.");
         } catch (Exception e) {
-            System.out.println("Failed to log out: " + e.getMessage());
+            System.out.println("Failed to log out. Please try again.");
         }
     }
 
@@ -157,6 +157,20 @@ public class PostLoginClient {
         System.out.println("- observe game: Observe an ongoing game");
         System.out.println("- logout: Log out of your account");
         System.out.println("- help: Display this help message");
+    }
+
+    private String chooseColor() {
+        System.out.print("Choose color (white or black) or type 'cancel' to go back: ");
+        String color = scanner.nextLine().trim().toLowerCase();
+        if (color.equals("white") || color.equals("black")) {
+            return color;
+        } else if (color.equals("cancel")) {
+            System.out.println("Canceled color selection.");
+            return null;
+        } else {
+            System.out.println("Invalid color choice. Please choose 'white' or 'black'.");
+            return chooseColor(); // Recursive call for retry
+        }
     }
 }
 
