@@ -33,16 +33,28 @@ public class PreLoginClient {
 
             try {
                 switch (command) {
-                    case "register" -> register();
-                    case "login" -> {
-                        if (login()) return; // Exit to proceed to post-login
+                    case "register" -> {
+                        register();
                     }
-                    case "help" -> displayHelp();
-                    case "quit" -> exitProgram();
-                    default -> System.out.println("Invalid command. Type 'help' for a list of commands.");
+                    case "login" -> {
+                        boolean isLoggedIn = login();
+                        if (isLoggedIn) {
+                            return; // Exit to proceed to post-login
+                        }
+                    }
+                    case "help" -> {
+                        displayHelp();
+                    }
+                    case "quit" -> {
+                        exitProgram();
+                    }
+                    default -> {
+                        System.out.println("Invalid command. Type 'help' for a list of commands.");
+                    }
                 }
             } catch (Exception e) {
-                System.out.println("An error occurred: " + e.getMessage());
+                System.err.println("An unexpected error occurred while processing your command.");
+                e.printStackTrace();
             }
         }
     }

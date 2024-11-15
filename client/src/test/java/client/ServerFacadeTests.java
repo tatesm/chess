@@ -38,7 +38,7 @@ public class ServerFacadeTests {
     }
 
     @Test
-    void registerUser_positive() {
+    void registerUserPositive() {
         try {
             AuthData authData = facade.register("testUser", "password", "test@example.com");
             assertNotNull(authData);
@@ -50,7 +50,7 @@ public class ServerFacadeTests {
     }
 
     @Test
-    void registerUser_negative() {
+    void registerUserNegative() {
         try {
             // Register the same user twice to trigger an error
             facade.register("testUser", "password", "test@example.com");
@@ -64,7 +64,7 @@ public class ServerFacadeTests {
     }
 
     @Test
-    void loginUser_positive() {
+    void loginUserPositive() {
         try {
             facade.register("testUser", "password", "test@example.com");
             AuthData authData = facade.login("testUser", "password");
@@ -78,14 +78,14 @@ public class ServerFacadeTests {
 
 
     @Test
-    void loginUser_negative() throws Exception {
+    void loginUserNegative() throws Exception {
         AuthData result = facade.login("nonexistentUser", "wrongPassword");
         assertNull(result, "Expected login to return null for invalid credentials");
     }
 
 
     @Test
-    void createGame_positive() {
+    void createGamePositive() {
         try {
             facade.register("player", "password", "player@example.com");
             authToken = facade.login("player", "password").authToken();
@@ -98,7 +98,7 @@ public class ServerFacadeTests {
     }
 
     @Test
-    void createGame_negative() {
+    void createGameNegative() {
         Exception exception = assertThrows(Exception.class, () ->
                 facade.createGame("invalidToken", "New Game", "white")
         );
@@ -106,7 +106,7 @@ public class ServerFacadeTests {
     }
 
     @Test
-    void listGames_positive() {
+    void listGamesPositive() {
         try {
             facade.register("player", "password", "player@example.com");
             authToken = facade.login("player", "password").authToken();
@@ -122,7 +122,7 @@ public class ServerFacadeTests {
     }
 
     @Test
-    void listGames_negative() {
+    void listGamesNegative() {
         Exception exception = assertThrows(Exception.class, () ->
                 facade.listGames("invalidToken")
         );
@@ -131,7 +131,7 @@ public class ServerFacadeTests {
     }
 
     @Test
-    void joinGame_positive() {
+    void joinGamePositive() {
         try {
             facade.register("player", "password", "player@example.com");
             authToken = facade.login("player", "password").authToken();
@@ -143,7 +143,7 @@ public class ServerFacadeTests {
     }
 
     @Test
-    void joinGame_negative() {
+    void joinGameNegative() {
         Exception exception = assertThrows(Exception.class, () ->
                 facade.joinGame("invalidToken", 1, "black")
         );
