@@ -159,13 +159,29 @@ public class ServerFacade {
         }
     }
 
-    public void quitGame(int gameId, String authToken) throws Exception {
+    public boolean quitGame(int gameId, String authToken) throws Exception {
         URL url = new URL(serverUrl + "/game/" + gameId + "/quit");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("DELETE");
         connection.setRequestProperty("Authorization", authToken);  // Pass authToken in header
 
-        handleError(connection); // Method to handle errors
+        try {
+            handleError(connection); // Throws an exception if there's an error response
+            return true; // Return true if no errors were encountered
+        } catch (Exception e) {
+            System.out.println("Failed to quit game: " + e.getMessage());
+            return false; // Return false if an error occurs
+        } finally {
+            connection.disconnect(); // Ensure the connection is closed
+        }
+    }
+
+    public void clearDatabase() throws Exception {
+        URL url = new URL(serverUrl + "/db");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("DELETE");
+        handleError(connection);
+        connection.disconnect();
     }
 
 
