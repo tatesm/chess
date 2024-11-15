@@ -32,14 +32,14 @@ public class GameClient {
     /**
      * Runs the main command loop for the game client.
      */
-   public void run() {
+    public void run() {
         while (true) {
             System.out.print("Enter command (move, display board, quit): ");
             String command = scanner.nextLine().trim().toLowerCase();
 
-            /*try {
+            try {
                 switch (command) {
-                    //case "move" -> promptForMove();
+                    case "move" -> promptForMove();
                     case "display board" -> displayCurrentBoard();
                     case "quit" -> {
                         exitGame();
@@ -50,13 +50,12 @@ public class GameClient {
             } catch (Exception e) {
                 System.out.println("An unexpected error occurred. Please try again.");
             }
-        }*/
+        }
     }
 
     /**
      * Prompts the user for a move and attempts to make it on the server.
      */
-    /*
     private void promptForMove() {
         System.out.print("Enter your move (e.g., e2e4): ");
         String move = scanner.nextLine().trim();
@@ -73,7 +72,7 @@ public class GameClient {
         } catch (Exception e) {
             System.out.println("Move failed. Check the move format and try again.");
         }
-    }*/
+    }
 
     /**
      * Validates that the move follows a basic format.
@@ -81,16 +80,14 @@ public class GameClient {
      * @param move The move string entered by the user.
      * @return true if the move format is valid; false otherwise.
      */
-    /*
     private boolean validateMoveFormat(String move) {
         // Simple validation for chess move format (e.g., e2e4)
         return move.matches("^[a-h][1-8][a-h][1-8]$");
-    }*/
+    }
 
     /**
      * Displays the current game board by fetching it from the server.
      */
-    /*
     private void displayCurrentBoard() {
         System.out.println("Current board state:");
         try {
@@ -99,12 +96,11 @@ public class GameClient {
         } catch (Exception e) {
             System.out.println("Unable to fetch board from server.");
         }
-    }*/
+    }
 
     /**
      * Quits the game and exits gracefully.
      */
-    /*
     private void exitGame() {
         try {
             serverFacade.quitGame(gameId, authToken);
@@ -112,6 +108,6 @@ public class GameClient {
         } catch (Exception e) {
             System.out.println("Failed to exit the game properly.");
         }
-    }*/
+    }
 }
 

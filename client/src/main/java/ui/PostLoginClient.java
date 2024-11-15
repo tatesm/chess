@@ -127,8 +127,8 @@ public class PostLoginClient {
             System.out.print("Enter authorization token: ");
             String authToken = scanner.nextLine().trim();
 
-            // serverFacade.observeGame(authToken, gameId);
-            //System.out.println("Observing game #" + gameId);
+            serverFacade.observeGame(authToken, gameId);
+            System.out.println("Observing game #" + gameId);
         } catch (NumberFormatException e) {
             System.out.println("Invalid game ID. Please enter a valid number.");
         } catch (Exception e) {

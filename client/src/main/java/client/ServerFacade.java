@@ -151,7 +151,7 @@ public class ServerFacade {
         }
     }
 
-/*
+
     public void makeMove(int gameId, String move, String authToken) throws Exception {
         URL url = new URL(serverUrl + "/game/" + gameId + "/move");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -204,7 +204,7 @@ public class ServerFacade {
         } finally {
             connection.disconnect(); // Ensure the connection is closed
         }
-    }*/
+    }
 
     public void clearDatabase() throws Exception {
         URL url = new URL(serverUrl + "/db");
@@ -214,7 +214,7 @@ public class ServerFacade {
         connection.disconnect();
     }
 
-/*
+
     public void observeGame(String authToken, int gameId) throws Exception {
         URL url = new URL(serverUrl + "/game/" + gameId + "/observe");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -226,7 +226,7 @@ public class ServerFacade {
         try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
             reader.read(); // Simply consume the response
         }
-    }*/
+    }
 
     public void logout(String authToken) throws Exception {
         URL url = new URL(serverUrl + "/session");
