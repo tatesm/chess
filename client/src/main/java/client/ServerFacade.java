@@ -27,24 +27,36 @@ public class ServerFacade {
     }
 
     public AuthData register(String username, String password, String email) throws Exception {
-        URL url = new URL(serverUrl + "/user");
+        URL url = new URL(serverUrl + "/user");  // Ensure the correct server endpoint
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type", "application/json");
         connection.setDoOutput(true);
 
+        // Create user data from inputs
         UserData userData = new UserData(username, password, email);
         String requestBody = gson.toJson(userData);
 
+        // Send request to the server
         try (OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream())) {
             writer.write(requestBody);
             writer.flush();
         }
 
+        // Check for specific error responses
+        if (connection.getResponseCode() == 403) {  // Username already taken
+            try (InputStreamReader errorReader = new InputStreamReader(connection.getErrorStream())) {
+                ErrorResponse errorResponse = gson.fromJson(errorReader, ErrorResponse.class);
+                throw new Exception(errorResponse.getMessage());
+            }
+        }
+
+        // Handle general errors
         handleError(connection);
 
+        // Read the response body for successful registration
         try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
-            return gson.fromJson(reader, AuthData.class); // Return AuthData object on success
+            return gson.fromJson(reader, AuthData.class);
         }
     }
 
@@ -118,29 +130,34 @@ public class ServerFacade {
 
 
     public void joinGame(String authToken, int gameID, String playerColor) throws Exception {
-        URL url = new URL(serverUrl + "/game"); // Ensure correct endpoint
+        URL url = new URL(serverUrl + "/game");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("PUT");
         connection.setRequestProperty("Authorization", authToken);
         connection.setRequestProperty("Content-Type", "application/json");
         connection.setDoOutput(true);
 
-
         CreatedStuff.JoinGameRequest request = new CreatedStuff.JoinGameRequest(gameID, playerColor);
         String requestBody = gson.toJson(request);
+        System.out.println("Sending request: " + requestBody);
+
         try (OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream())) {
             writer.write(requestBody);
             writer.flush();
         }
 
-        // Check for error response and parse it as JSON
-        if (connection.getResponseCode() >= 400) {
+        int responseCode = connection.getResponseCode();
+        System.out.println("Response code: " + responseCode);
+        if (responseCode >= 400) {
             try (InputStreamReader errorReader = new InputStreamReader(connection.getErrorStream())) {
                 ErrorResponse errorResponse = gson.fromJson(errorReader, ErrorResponse.class);
-                throw new Exception(errorResponse.getMessage());
+                throw new Exception("Server error: " + errorResponse.getMessage());
             }
+        } else {
+            System.out.println("Join game request successful.");
         }
     }
+
 
     // Define the ErrorResponse class in ServerFacade (or a shared package)
     private static class ErrorResponse {

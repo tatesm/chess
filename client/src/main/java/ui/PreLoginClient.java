@@ -84,18 +84,30 @@ public class PreLoginClient {
         System.out.print("Email: ");
         String email = scanner.nextLine();
 
-        AuthData authData = serverFacade.register(username, password, email);
-        if (
-                authData != null
-        ) {
-            System.out.println("Registration successful! You can now log in with username: " + username);
+        try {
+            // Attempt to register the user
+            AuthData authData = serverFacade.register(username, password, email);
 
-            return authData.authToken();
-        } else {
+            // Check if registration was successful
+            if (authData != null) {
+                System.out.println("Registration successful! You can now log in with username: " + username);
+                return authData.authToken();
+            } else {
+                // Handle cases where the server response is null
+                System.out.println("Registration failed: Unknown error.");
+                return null;
+            }
+        } catch (Exception e) {
+            // Handle specific exception if the username is already taken
+            if (e.getMessage().contains("Username already taken")) {
+                System.out.println("Error: Username already taken");
+            } else {
+                System.out.println("Error: " + e.getMessage());
+            }
             return null;
         }
-
     }
+
 
     /**
      * Prompts the user for login credentials and attempts to authenticate.

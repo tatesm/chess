@@ -1,6 +1,7 @@
 package ui;
 
 import client.ServerFacade;
+import model.GameData;
 
 import java.util.Scanner;
 
@@ -88,36 +89,37 @@ public class PostLoginClient {
             int gameId = Integer.parseInt(scanner.nextLine());
             String playerColor = chooseColor();
             if (playerColor == null) {
-                return false; // User canceled the action
+                System.out.println("Action canceled.");
+                return false;
             }
 
             serverFacade.joinGame(authToken, gameId, playerColor);
             joinedGameId = gameId;
-            System.out.println("Joined game #" + gameId + " as " + playerColor + ". Transitioning to game view...");
+            System.out.println("Successfully joined game #" + gameId + " as " + playerColor + ".");
             return true;
         } catch (NumberFormatException e) {
             System.out.println("Invalid game ID. Please enter a valid number.");
         } catch (Exception e) {
-            System.out.println("Failed to join game. Please try again.");
+            System.out.println("Failed to join game: " + e.getMessage());
         }
         return false;
     }
+
 
     private void createGame() {
         try {
             System.out.print("Enter game name: ");
             String gameName = scanner.nextLine().trim();
-            String playerColor = chooseColor();
-            if (playerColor == null) {
-                return; // User canceled the action
-            }
 
-            serverFacade.createGame(authToken, gameName, playerColor);
+            // No need to ask for player color during game creation
+            serverFacade.createGame(authToken, gameName, null); // Pass null or an empty string for the color if required
+
             System.out.println("Game '" + gameName + "' created successfully.");
         } catch (Exception e) {
             System.out.println("Failed to create game. Please try again.");
         }
     }
+
 
     private void listGames() {
         try {
@@ -126,7 +128,12 @@ public class PostLoginClient {
             if (gamesList.isEmpty()) {
                 System.out.println("No games currently available.");
             } else {
-                gamesList.forEach(game -> System.out.println("- " + game));
+                int index = 1; // Start numbering from 1
+                for (GameData game : gamesList) {
+                    String white = (game.getWhiteUsername() == null) ? "Empty" : game.getWhiteUsername();
+                    String black = (game.getBlackUsername() == null) ? "Empty" : game.getBlackUsername();
+                    System.out.printf("%d. Game Name: %s, White: %s, Black: %s%n", index++, game.getGameName(), white, black);
+                }
             }
         } catch (Exception e) {
             System.out.println("Failed to retrieve game list. Please try again.");

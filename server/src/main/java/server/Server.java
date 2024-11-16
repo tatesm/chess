@@ -89,6 +89,7 @@ public class Server {
     }
 
     private Object joinGame(spark.Request req, spark.Response res) {
+
         CreatedStuff.JoinGameRequest joinGameRequest = GSON.fromJson(req.body(), CreatedStuff.JoinGameRequest.class);
         String authToken = req.headers("authorization");
         int gameID = joinGameRequest.getGameID();
