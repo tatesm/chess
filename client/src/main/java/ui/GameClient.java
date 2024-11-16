@@ -107,14 +107,16 @@ public class GameClient {
      * Displays the current game board by fetching it from the server.
      */
     private void displayCurrentBoard() {
+        // Display the current state of the simulated board
         System.out.println("Current board state:");
         try {
-            String board = serverFacade.getBoard(gameId, authToken);
+            String board = serverFacade.getBoard(gameId, authToken); // Fetch the simulated board
             System.out.println(board);
         } catch (Exception e) {
-            System.out.println("Unable to fetch board from server.");
+            System.out.println("Unable to fetch board from server. Simulated response used.");
         }
     }
+
 
     /**
      * Quits the game and exits gracefully.

@@ -194,17 +194,29 @@ public class ServerFacade {
 
 
     public String getBoard(int gameId, String authToken) throws Exception {
-        URL url = new URL(serverUrl + "/game/" + gameId + "/board");
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-        connection.setRequestProperty("Authorization", authToken);  // Pass authToken in header
+        // Simulated board representation
+        String[][] board = new String[][]{
+                {" ♜ ", " ♞ ", " ♝ ", " ♛ ", " ♚ ", " ♝ ", " ♞ ", " ♜ "},
+                {" ♟ ", " ♟ ", " ♟ ", " ♟ ", " ♟ ", " ♟ ", " ♟ ", " ♟ "},
+                {"   ", "   ", "   ", "   ", "   ", "   ", "   ", "   "},
+                {"   ", "   ", "   ", "   ", "   ", "   ", "   ", "   "},
+                {"   ", "   ", "   ", "   ", "   ", "   ", "   ", "   "},
+                {"   ", "   ", "   ", "   ", "   ", "   ", "   ", "   "},
+                {" ♙ ", " ♙ ", " ♙ ", " ♙ ", " ♙ ", " ♙ ", " ♙ ", " ♙ "},
+                {" ♖ ", " ♘ ", " ♗ ", " ♕ ", " ♔ ", " ♗ ", " ♘ ", " ♖ "}
+        };
 
-        handleError(connection); // Method to handle errors
-
-        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
-            return gson.fromJson(reader, String.class);  // Assuming board is returned as JSON string
+        StringBuilder boardRepresentation = new StringBuilder();
+        for (String[] row : board) {
+            for (String cell : row) {
+                boardRepresentation.append(cell);
+            }
+            boardRepresentation.append("\n");
         }
+
+        return boardRepresentation.toString(); // Return the simulated board as a string
     }
+
 
     public boolean quitGame(int gameId, String authToken) throws Exception {
         URL url = new URL(serverUrl + "/game/" + gameId + "/quit");
@@ -233,17 +245,12 @@ public class ServerFacade {
 
 
     public void observeGame(String authToken, int gameId) throws Exception {
-        URL url = new URL(serverUrl + "/game/" + gameId + "/observe");
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Authorization", authToken); // Set the authorization token
-        handleError(connection);
-
-        // Optional: Read the response (if any) to ensure the connection closes properly
-        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
-            reader.read(); // Simply consume the response
-        }
+        // Fetch the board using getBoard and display it
+        String board = getBoard(gameId, authToken); // Call the getBoard method
+        System.out.println("Observing Game #" + gameId);
+        System.out.println(board); // Print the board for the user
     }
+
 
     public void logout(String authToken) throws Exception {
         URL url = new URL(serverUrl + "/session");

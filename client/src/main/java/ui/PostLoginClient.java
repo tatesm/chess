@@ -3,6 +3,8 @@ package ui;
 import client.ServerFacade;
 import model.GameData;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class PostLoginClient {
@@ -89,8 +91,36 @@ public class PostLoginClient {
     private boolean playGame() {
         // Handles the process of joining a game as a player
         try {
-            System.out.print("Enter game number: ");
-            int gameId = Integer.parseInt(scanner.nextLine());
+            // Fetch the list of games directly from the server
+            List<GameData> gamesList = serverFacade.listGames(authToken);
+
+            if (gamesList.isEmpty()) {
+                System.out.println("No games are available to join. Please list games first.");
+                return false;
+            }
+
+            // Display available games for reference
+            System.out.println("Available games:");
+            int index = 1;
+            for (GameData game : gamesList) {
+                String white = (game.getWhiteUsername() == null) ? "Empty" : game.getWhiteUsername();
+                String black = (game.getBlackUsername() == null) ? "Empty" : game.getBlackUsername();
+                System.out.printf("%d. Game Name: %s, White: %s, Black: %s%n", index++, game.getGameName(), white, black);
+            }
+
+            System.out.print("Enter game number (index as displayed above): ");
+            int gameIndex = Integer.parseInt(scanner.nextLine()); // User inputs game index
+
+            // Validate the game index
+            if (gameIndex < 1 || gameIndex > gamesList.size()) {
+                System.out.println("Invalid game index. Please enter a number between 1 and " + gamesList.size() + ".");
+                return false;
+            }
+
+            // Translate game index to game ID
+            GameData selectedGame = gamesList.get(gameIndex - 1); // Convert 1-based index to 0-based
+            int gameId = selectedGame.getGameID(); // Retrieve the actual game ID from the selected game
+
             String playerColor = chooseColor(); // User chooses their desired color
             if (playerColor == null) {
                 System.out.println("Action canceled.");
@@ -98,16 +128,16 @@ public class PostLoginClient {
             }
 
             serverFacade.joinGame(authToken, gameId, playerColor); // Attempt to join the game
-            joinedGameId = gameId; // Save the joined game's ID
-            System.out.println("Successfully joined game #" + gameId + " as " + playerColor + ".");
+            System.out.printf("Successfully joined game '%s' as %s.%n", selectedGame.getGameName(), playerColor);
             return true;
         } catch (NumberFormatException e) {
-            System.out.println("Invalid game ID. Please enter a valid number.");
+            System.out.println("Invalid input. Please enter a valid number.");
         } catch (Exception e) {
             System.out.println("Failed to join game: " + e.getMessage()); // Display error from the server
         }
         return false; // Joining game failed
     }
+
 
     private void createGame() {
         // Handles creating a new game
@@ -142,20 +172,22 @@ public class PostLoginClient {
         }
     }
 
+
     private void observeGame() {
-        // Allows the user to observe a game without participating
+        // Allows the user to view a game's board without participating
         try {
             System.out.print("Enter game number to observe: ");
             int gameId = Integer.parseInt(scanner.nextLine());
 
-            serverFacade.observeGame(authToken, gameId); // API call to observe the game
-            System.out.println("Observing game #" + gameId);
+
+            serverFacade.observeGame(authToken, gameId);
         } catch (NumberFormatException e) {
-            System.out.println("Invalid game ID. Please enter a valid number."); // User input error
+            System.out.println("Invalid game number. Please enter a valid number."); // Inform user about invalid input
         } catch (Exception e) {
-            System.out.println("Failed to observe game. Please try again."); // Handle API errors
+            System.out.println("Failed to retrieve game board. Please try again."); // Handle errors fetching the board
         }
     }
+
 
     private void logout() {
         // Logs the user out and invalidates their session
