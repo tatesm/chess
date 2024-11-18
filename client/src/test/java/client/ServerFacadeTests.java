@@ -49,7 +49,6 @@ public class ServerFacadeTests {
         }
     }
 
-
     @Test
     void registerUserNegative() {
         try {
