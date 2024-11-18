@@ -89,23 +89,13 @@ public class PostLoginClient {
     }
 
     private boolean playGame() {
-        // Handles the process of joining a game as a player
         try {
             // Fetch the list of games directly from the server
             List<GameData> gamesList = serverFacade.listGames(authToken);
+            displayGames(gamesList); // Use the helper method
 
             if (gamesList.isEmpty()) {
-                System.out.println("No games are available to join. Please list games first.");
                 return false;
-            }
-
-            // Display available games for reference
-            System.out.println("Available games:");
-            int index = 1;
-            for (GameData game : gamesList) {
-                String white = (game.getWhiteUsername() == null) ? "Empty" : game.getWhiteUsername();
-                String black = (game.getBlackUsername() == null) ? "Empty" : game.getBlackUsername();
-                System.out.printf("%d. Game Name: %s, White: %s, Black: %s%n", index++, game.getGameName(), white, black);
             }
 
             System.out.print("Enter game number (index as displayed above): ");
@@ -152,21 +142,24 @@ public class PostLoginClient {
         }
     }
 
-    private void listGames() {
-        // Displays all games available on the server
-        try {
+    private void displayGames(List<GameData> gamesList) {
+        if (gamesList.isEmpty()) {
+            System.out.println("No games currently available."); // No games to display
+        } else {
             System.out.println("Available games:");
-            var gamesList = serverFacade.listGames(authToken); // Fetch the game list from the server
-            if (gamesList.isEmpty()) {
-                System.out.println("No games currently available."); // No games to display
-            } else {
-                int index = 1; // Start numbering games from 1
-                for (GameData game : gamesList) {
-                    String white = (game.getWhiteUsername() == null) ? "Empty" : game.getWhiteUsername();
-                    String black = (game.getBlackUsername() == null) ? "Empty" : game.getBlackUsername();
-                    System.out.printf("%d. Game Name: %s, White: %s, Black: %s%n", index++, game.getGameName(), white, black);
-                }
+            int index = 1;
+            for (GameData game : gamesList) {
+                String white = (game.getWhiteUsername() == null) ? "Empty" : game.getWhiteUsername();
+                String black = (game.getBlackUsername() == null) ? "Empty" : game.getBlackUsername();
+                System.out.printf("%d. Game Name: %s, White: %s, Black: %s%n", index++, game.getGameName(), white, black);
             }
+        }
+    }
+
+    private void listGames() {
+        try {
+            var gamesList = serverFacade.listGames(authToken); // Fetch the game list from the server
+            displayGames(gamesList); // Use the helper method
         } catch (Exception e) {
             System.out.println("Failed to retrieve game list. Please try again."); // Handle API errors gracefully
         }
