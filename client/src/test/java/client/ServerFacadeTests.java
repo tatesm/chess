@@ -49,6 +49,7 @@ public class ServerFacadeTests {
         }
     }
 
+
     @Test
     void registerUserNegative() {
         try {
@@ -57,7 +58,7 @@ public class ServerFacadeTests {
             Exception exception = assertThrows(Exception.class, () ->
                     facade.register("testUser", "password", "test@example.com")
             );
-            assertTrue(exception.getMessage().contains("Error: Forbidden"));
+            assertTrue(exception.getMessage().contains("Error: Username already taken"));
         } catch (Exception e) {
             fail("Unexpected failure: " + e.getMessage());
         }
