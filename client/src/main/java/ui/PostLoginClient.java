@@ -144,7 +144,7 @@ public class PostLoginClient {
 
     private void displayGames(List<GameData> gamesList) {
         if (gamesList.isEmpty()) {
-            System.out.println("No games currently available."); // No games to display
+            System.out.println("No games currently available."); // no games to display
         } else {
             System.out.println("Available games:");
             int index = 1;
