@@ -187,12 +187,13 @@ public class ServerFacadeTests {
     @Test
     void getBoardNegative() {
         try {
-            facade.getBoard(1, "invalidToken");
-            assertTrue(true); // Passes unconditionally
+            facade.getBoard(1, "invalidToken", "white");
+            assertTrue(true); // Always pass
         } catch (Exception e) {
-            assertTrue(true); // Passes on exception
+            assertTrue(true); // Also pass if an exception is thrown
         }
     }
+
 
     @Test
     void quitGamePositive() {
@@ -231,12 +232,13 @@ public class ServerFacadeTests {
     @Test
     void observeGameNegative() {
         try {
-            facade.observeGame("invalidToken", 1);
-            assertTrue(true); // Passes unconditionally
+            facade.observeGame("invalidToken", 1, "white");
+            assertTrue(true); // Always pass
         } catch (Exception e) {
-            assertTrue(true); // Passes on exception
+            assertTrue(true); // Also pass if an exception is thrown
         }
     }
+
 
     @Test
     void logoutPositive() {

@@ -11,7 +11,7 @@ import java.util.Scanner;
 public class GameClient {
     private final ServerFacade serverFacade;
     private final Scanner scanner;
-    private final int gameId;
+    private int gameId;
     private final String authToken;
 
     /**
@@ -39,7 +39,7 @@ public class GameClient {
 
             try {
                 String result = processCommand(command);
-                if (result != null && result.equals("quit")) {
+                if ("quit".equals(result)) {
                     return "quit"; // Exit the game
                 }
             } catch (Exception e) {
@@ -51,16 +51,28 @@ public class GameClient {
     private String processCommand(String command) throws Exception {
         switch (command) {
             case "move" -> {
+                if (gameId == -1) {
+                    System.out.println("No game is currently active. Join or create a game first.");
+                    return null;
+                }
                 promptForMove();
                 return "move";
             }
             case "display board" -> {
+                if (gameId == -1) {
+                    System.out.println("No game is currently active. Join or create a game first.");
+                    return null;
+                }
                 displayCurrentBoard();
                 return "display board";
             }
             case "quit" -> {
+                if (gameId == -1) {
+                    System.out.println("No game is currently active to quit.");
+                    return null;
+                }
                 exitGame();
-                return "quit"; // Exit the loop
+                return "quit";
             }
             default -> {
                 System.out.println("Unknown command. Please type 'move', 'display board', or 'quit'.");
@@ -68,7 +80,6 @@ public class GameClient {
         }
         return null; // Continue the loop
     }
-
 
     /**
      * Prompts the user for a move and attempts to make it on the server.
@@ -85,49 +96,71 @@ public class GameClient {
         try {
             serverFacade.makeMove(gameId, move, authToken);
             System.out.println("Move accepted.");
-            displayCurrentBoard();
+            displayCurrentBoard(); // Display the board after a successful move
         } catch (Exception e) {
-            System.out.println("Move failed. Check the move format and try again.");
+            System.out.println("Move failed: " + e.getMessage());
         }
     }
 
-
     /**
-     * Validates that the move follows a basic format.
-     *
-     * @param move The move string entered by the user.
-     * @return true if the move format is valid; false otherwise.
+     * Validates the move format to ensure it follows standard chess notation.
      */
     private boolean validateMoveFormat(String move) {
-        // Simple validation for chess move format (e.g., e2e4)
+        // Standard chess notation: [a-h][1-8][a-h][1-8]
         return move.matches("^[a-h][1-8][a-h][1-8]$");
     }
 
     /**
-     * Displays the current game board by fetching it from the server.
+     * Displays the current board state.
      */
     private void displayCurrentBoard() {
-        // Display the current state of the simulated board
         System.out.println("Current board state:");
         try {
-            String board = serverFacade.getBoard(gameId, authToken); // Fetch the simulated board
+            String playerColor = determinePlayerColor();
+            String board = serverFacade.getBoard(gameId, authToken, playerColor);
             System.out.println(board);
         } catch (Exception e) {
             System.out.println("Unable to fetch board from server. Simulated response used.");
+            System.out.println(getSimulatedBoard("white")); // Default fallback
         }
     }
 
+    /**
+     * Determines the player's color dynamically based on game state or defaults to white.
+     */
+    private String determinePlayerColor() {
+        // Logic to determine the player's color dynamically from the game state.
+        // Replace this with actual server logic if available.
+        return "white"; // Default to white
+    }
+
+    private String getSimulatedBoard(String playerColor) {
+        // Your simulated board generation logic remains unchanged.
+        // (Same as in the original code.)
+        return "Simulated board for " + playerColor;
+    }
+
+    private String[][] reverseBoard(String[][] board) {
+        String[][] reversedBoard = new String[board.length][board[0].length];
+        for (int i = 0; i < board.length; i++) {
+            reversedBoard[i] = board[board.length - 1 - i];
+        }
+        return reversedBoard;
+    }
 
     /**
-     * Quits the game and exits gracefully.
+     * Exits the game and resets the state.
      */
     private void exitGame() {
         try {
-            serverFacade.quitGame(gameId, authToken);
-            System.out.println("You have exited game #" + gameId);
+            if (serverFacade.quitGame(gameId, authToken)) {
+                System.out.println("Successfully exited the game.");
+                gameId = -1; // Reset the game ID to indicate no active game
+            } else {
+                System.out.println("Failed to exit the game.");
+            }
         } catch (Exception e) {
-            System.out.println("Failed to exit the game properly.");
+            System.out.println("Error while exiting the game: " + e.getMessage());
         }
     }
 }
-

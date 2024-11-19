@@ -8,6 +8,7 @@ import model.AuthData;
 import model.GameData;
 import model.UserData;
 import com.google.gson.Gson;
+import ui.EscapeSequences;
 
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -193,28 +194,34 @@ public class ServerFacade {
     }
 
 
-    public String getBoard(int gameId, String authToken) throws Exception {
+    public String getBoard(int gameId, String authToken, String playerColor) throws Exception {
         // Simulated board representation
         String[][] board = new String[][]{
-                {" ♜ ", " ♞ ", " ♝ ", " ♛ ", " ♚ ", " ♝ ", " ♞ ", " ♜ "},
-                {" ♟ ", " ♟ ", " ♟ ", " ♟ ", " ♟ ", " ♟ ", " ♟ ", " ♟ "},
-                {"   ", "   ", "   ", "   ", "   ", "   ", "   ", "   "},
-                {"   ", "   ", "   ", "   ", "   ", "   ", "   ", "   "},
-                {"   ", "   ", "   ", "   ", "   ", "   ", "   ", "   "},
-                {"   ", "   ", "   ", "   ", "   ", "   ", "   ", "   "},
-                {" ♙ ", " ♙ ", " ♙ ", " ♙ ", " ♙ ", " ♙ ", " ♙ ", " ♙ "},
-                {" ♖ ", " ♘ ", " ♗ ", " ♕ ", " ♔ ", " ♗ ", " ♘ ", " ♖ "}
+                {EscapeSequences.BLACK_ROOK, EscapeSequences.BLACK_KNIGHT, EscapeSequences.BLACK_BISHOP, EscapeSequences.BLACK_QUEEN, EscapeSequences.BLACK_KING, EscapeSequences.BLACK_BISHOP, EscapeSequences.BLACK_KNIGHT, EscapeSequences.BLACK_ROOK},
+                {EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN},
+                {EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY},
+                {EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY},
+                {EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY},
+                {EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY},
+                {EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN},
+                {EscapeSequences.WHITE_ROOK, EscapeSequences.WHITE_KNIGHT, EscapeSequences.WHITE_BISHOP, EscapeSequences.WHITE_QUEEN, EscapeSequences.WHITE_KING, EscapeSequences.WHITE_BISHOP, EscapeSequences.WHITE_KNIGHT, EscapeSequences.WHITE_ROOK}
         };
 
-        StringBuilder boardRepresentation = new StringBuilder();
-        for (String[] row : board) {
-            for (String cell : row) {
-                boardRepresentation.append(cell);
-            }
-            boardRepresentation.append("\n");
+        // Adjust board orientation based on the player's color
+        if (playerColor.equalsIgnoreCase("black")) {
+            board = reverseBoard(board);
         }
 
-        return boardRepresentation.toString(); // Return the simulated board as a string
+        return Helper.formatBoard(board); // Use formatBoard to build the display
+    }
+
+
+    private String[][] reverseBoard(String[][] board) {
+        String[][] reversedBoard = new String[board.length][board[0].length];
+        for (int i = 0; i < board.length; i++) {
+            reversedBoard[i] = board[board.length - 1 - i];
+        }
+        return reversedBoard;
     }
 
 
@@ -244,11 +251,17 @@ public class ServerFacade {
     }
 
 
-    public void observeGame(String authToken, int gameId) throws Exception {
-        // Fetch the board using getBoard and display it
-        String board = getBoard(gameId, authToken); // Call the getBoard method
-        System.out.println("Observing Game #" + gameId);
-        System.out.println(board); // Print the board for the user
+    public void observeGame(String authToken, int gameId, String perspective) throws Exception {
+        // Validate perspective input
+        if (!perspective.equalsIgnoreCase("white") && !perspective.equalsIgnoreCase("black")) {
+            perspective = "white"; // Default perspective
+        }
+
+        // Fetch the board
+        String board = getBoard(gameId, authToken, perspective);
+
+        System.out.println("Observing Game #" + gameId + " as " + perspective);
+        System.out.println(board);
     }
 
 

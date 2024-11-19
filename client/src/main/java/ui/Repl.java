@@ -219,17 +219,36 @@ public class Repl {
     }
 
     private void observeGame() {
-        System.out.print("Enter game number to observe: ");
-        int gameId = Integer.parseInt(scanner.nextLine().trim());
-
         try {
-            serverFacade.observeGame(authToken, gameId);
+            System.out.print("Enter game number to observe: ");
+            int gameId;
+
+            // Validate numeric input for game ID
+            try {
+                gameId = Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid game number.");
+                return;
+            }
+
+            // Prompt the user for a perspective
+            System.out.print("Choose perspective (white or black, default is white): ");
+            String perspective = scanner.nextLine().trim().toLowerCase();
+            if (!perspective.equals("white") && !perspective.equals("black")) {
+                perspective = "white"; // Default to white if input is invalid
+            }
+
+            // Attempt to observe the game
+            serverFacade.observeGame(authToken, gameId, perspective);
             inGame = true;
-            System.out.println("Observing game.");
+            System.out.println("Observing game #" + gameId + " as " + perspective + ".");
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid game number. Please enter a numeric value.");
         } catch (Exception e) {
             System.out.println("Game observe error: " + e.getMessage());
         }
     }
+
 
     private void makeMove() {
         System.out.print("Enter your move (e.g., e2 e4): ");

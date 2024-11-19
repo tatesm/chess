@@ -117,8 +117,15 @@ public class PostLoginClient {
                 return false; // User opted out
             }
 
-            serverFacade.joinGame(authToken, gameId, playerColor); // Attempt to join the game
+            // Attempt to join the game
+            serverFacade.joinGame(authToken, gameId, playerColor);
             System.out.printf("Successfully joined game '%s' as %s.%n", selectedGame.getGameName(), playerColor);
+
+            // Display the board after joining
+            String board = serverFacade.getBoard(gameId, authToken, playerColor); // Fetch the board
+            System.out.println("Current Board:");
+            System.out.println(board);
+
             return true;
         } catch (NumberFormatException e) {
             System.out.println("Invalid input. Please enter a valid number.");
@@ -172,8 +179,14 @@ public class PostLoginClient {
             System.out.print("Enter game number to observe: ");
             int gameId = Integer.parseInt(scanner.nextLine());
 
+            System.out.print("Enter perspective (white or black, default is white): ");
+            String perspective = scanner.nextLine().trim().toLowerCase();
 
-            serverFacade.observeGame(authToken, gameId);
+            if (!perspective.equals("white") && !perspective.equals("black")) {
+                perspective = "white"; // Default perspective
+            }
+
+            serverFacade.observeGame(authToken, gameId, perspective); // Pass the perspective
         } catch (NumberFormatException e) {
             System.out.println("Invalid game number. Please enter a valid number."); // Inform user about invalid input
         } catch (Exception e) {
