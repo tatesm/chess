@@ -140,13 +140,6 @@ public class GameClient {
         return "Simulated board for " + playerColor;
     }
 
-    private String[][] reverseBoard(String[][] board) {
-        String[][] reversedBoard = new String[board.length][board[0].length];
-        for (int i = 0; i < board.length; i++) {
-            reversedBoard[i] = board[board.length - 1 - i];
-        }
-        return reversedBoard;
-    }
 
     /**
      * Exits the game and resets the state.
