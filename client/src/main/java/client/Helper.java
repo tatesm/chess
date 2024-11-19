@@ -5,6 +5,7 @@ import ui.EscapeSequences;
 public class Helper {
     static String formatBoard(String[][] board) {
         StringBuilder boardRepresentation = new StringBuilder();
+        //If black flip the headers
 
         // Add column labels (A-H)
         boardRepresentation.append("   "); // Indentation for row numbers
@@ -23,6 +24,7 @@ public class Helper {
             boardRepresentation.append(" ").append(8 - row).append("\n"); // Row number on the right
         }
 
+
         // Add column labels again (A-H)
         boardRepresentation.append("   ");
         for (char column = 'A'; column <= 'H'; column++) {
@@ -32,5 +34,5 @@ public class Helper {
 
         return boardRepresentation.toString();
     }
-    
+
 }

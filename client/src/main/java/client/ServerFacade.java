@@ -224,8 +224,9 @@ public class ServerFacade {
         if (playerColor.equalsIgnoreCase("black")) {
             board = reverseBoard(board);
         }
-
         return Helper.formatBoard(board); // Use formatBoard to build the display
+
+        //NUKE this, use chessboard object
     }
 
 
