@@ -33,16 +33,6 @@ public class Server {
         initializeServices();
         registerRoutes();
 
-        // Initialize WebSocket
-        try {
-            org.eclipse.jetty.server.Server server = new org.eclipse.jetty.server.Server(desiredPort);
-            WebSocketServerContainerInitializer.configureContext(server.getServletContext())
-                    .addEndpoint(WebSocketHandler.class);
-            server.start();
-            server.join();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize WebSocket: " + e.getMessage());
-        }
 
         Spark.init();
         Spark.awaitInitialization();

@@ -1,4 +1,4 @@
-package server.websocketmessages;
+package websocket.messages;
 
 public class Notification {
     public enum Type {

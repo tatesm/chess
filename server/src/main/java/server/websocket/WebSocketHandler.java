@@ -6,8 +6,8 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
-import server.websocketmessages.Action;
-import server.websocketmessages.Notification;
+import websocket
+import websocket.messages.Notification;
 
 import java.io.IOException;
 
