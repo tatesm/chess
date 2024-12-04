@@ -29,12 +29,12 @@ public class Server {
         Spark.port(desiredPort);
         Spark.staticFiles.location("web");
 
+        // Register WebSocket before any routes
+        Spark.webSocket("/ws", WebSocketHandler.class);
+
         initializeDAOs();
         initializeServices();
         registerRoutes();
-
-        // Register WebSocket route
-        Spark.webSocket("/ws", WebSocketHandler.class);
 
         Spark.init();
         Spark.awaitInitialization();

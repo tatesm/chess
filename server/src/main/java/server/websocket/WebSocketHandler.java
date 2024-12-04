@@ -19,8 +19,11 @@ public class WebSocketHandler {
 
     @OnWebSocketConnect
     public void onConnect(Session session) {
-        System.out.println("New connection established: " + session.getRemoteAddress());
+        String authToken = "some_token"; // Extract auth token from session or request
+        connections.add(authToken, session);
+        System.out.println("New connection established: " + authToken);
     }
+
 
     @OnWebSocketMessage
     public void onMessage(Session session, String message) throws IOException {
@@ -39,47 +42,31 @@ public class WebSocketHandler {
         String authToken = connections.getAuthTokenBySession(session);
         if (authToken != null) {
             connections.remove(authToken);
-            System.out.println("Connection closed: " + authToken + " due to " + reason);
+            System.out.println("Connection closed: " + authToken + " Reason: " + reason);
         }
     }
 
     private void connectPlayer(String authToken, Integer gameID, Session session) {
-        try {
-            connections.add(authToken, session);
-            Notification notification = new Notification(Notification.Type.CONNECT, "Player connected to game " + gameID);
-            connections.broadcast(authToken, notification);
-        } catch (IOException e) {
-            System.err.println("Failed to connect player: " + e.getMessage());
-        }
+        connections.add(authToken, session);
+        Notification notification = new Notification(Notification.Type.CONNECT, "Player connected to game " + gameID);
+        connections.broadcast(authToken, notification);
     }
 
     private void handleMove(String authToken, Integer gameID) {
-        try {
-            Notification notification = new Notification(Notification.Type.MOVE, "Move made in game " + gameID + " by " + authToken);
-            connections.broadcast(authToken, notification);
-        } catch (IOException e) {
-            System.err.println("Failed to handle move: " + e.getMessage());
-        }
+        Notification notification = new Notification(Notification.Type.MOVE, "Move made in game " + gameID + " by " + authToken);
+        connections.broadcast(authToken, notification);
     }
 
     private void handleLeave(String authToken) {
-        try {
-            connections.remove(authToken);
-            Notification notification = new Notification(Notification.Type.DISCONNECT, "Player " + authToken + " left the game.");
-            connections.broadcast(authToken, notification);
-            System.out.println("Player " + authToken + " has left the game.");
-        } catch (IOException e) {
-            System.err.println("Failed to handle leave for player: " + authToken + ". Error: " + e.getMessage());
-        }
+        connections.remove(authToken);
+        Notification notification = new Notification(Notification.Type.DISCONNECT, "Player " + authToken + " left the game.");
+        connections.broadcast(authToken, notification);
+        System.out.println("Player " + authToken + " has left the game.");
     }
 
     private void handleResign(String authToken, Integer gameID) {
-        try {
-            Notification notification = new Notification(Notification.Type.RESIGN, "Player " + authToken + " resigned from game " + gameID);
-            connections.broadcast(authToken, notification);
-            System.out.println("Player " + authToken + " has resigned from game " + gameID + ".");
-        } catch (IOException e) {
-            System.err.println("Failed to handle resign for player: " + authToken + ". Error: " + e.getMessage());
-        }
+        Notification notification = new Notification(Notification.Type.RESIGN, "Player " + authToken + " resigned from game " + gameID);
+        connections.broadcast(authToken, notification);
+        System.out.println("Player " + authToken + " has resigned from game " + gameID + ".");
     }
 }

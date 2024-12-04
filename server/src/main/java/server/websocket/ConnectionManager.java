@@ -11,42 +11,41 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConnectionManager {
     private final ConcurrentHashMap<String, Connection> connections = new ConcurrentHashMap<>();
 
+    private final ConcurrentHashMap<Session, String> sessionToAuthToken = new ConcurrentHashMap<>();
+
     public void add(String playerName, Session session) {
         var connection = new Connection(playerName, session);
         connections.put(playerName, connection);
+        System.out.println("Connection added for player: " + playerName);
     }
 
     public void remove(String playerName) {
         connections.remove(playerName);
+        System.out.println("Connection removed for player: " + playerName);
     }
 
-    public void broadcast(String excludePlayer, Notification notification) throws IOException {
-        var toRemove = new ArrayList<Connection>();
-        for (var connection : connections.values()) {
+
+    public String getAuthTokenBySession(Session session) {
+        return sessionToAuthToken.get(session);
+    }
+
+
+    public void broadcast(String excludePlayer, Notification notification) {
+        for (Connection connection : connections.values()) {
             if (connection.isOpen() && !connection.getPlayerName().equals(excludePlayer)) {
-                connection.send(notification.toString());
-            } else if (!connection.isOpen()) {
-                toRemove.add(connection);
+                try {
+                    connection.send(notification.toString());
+                } catch (IOException e) {
+                    System.err.println("Failed to send notification to: " + connection.getPlayerName());
+                }
             }
         }
-
-        // Remove closed connections
-        for (var connection : toRemove) {
-            connections.remove(connection.getPlayerName());
-        }
     }
+
 
     public Connection getConnection(String playerName) {
         return connections.get(playerName);
     }
 
-    public String getAuthTokenBySession(Session session) {
-        for (Map.Entry<String, Connection> entry : connections.entrySet()) {
-            if (entry.getValue().getSession().equals(session)) {
-                return entry.getKey(); // Return the authToken
-            }
-        }
-        return null; // Return null if no matching session is found
-    }
 
 }
