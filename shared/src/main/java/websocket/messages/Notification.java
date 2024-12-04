@@ -4,7 +4,7 @@ public class Notification {
     public enum Type {
         CONNECT,
         MOVE,
-        DISCONNECT
+        RESIGN, DISCONNECT
     }
 
     private final Type type;

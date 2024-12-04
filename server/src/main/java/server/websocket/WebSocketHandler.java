@@ -61,6 +61,42 @@ public class WebSocketHandler {
         }
     }
 
+    private void handleLeave(String authToken, Integer gameID, Session session) {
+        try {
+            // Remove the player from the ConnectionManager
+            connections.remove(authToken);
+
+            // Notify others in the game about the player leaving
+            Notification notification = new Notification(
+                    Notification.Type.DISCONNECT,
+                    "Player with token " + authToken + " left game " + gameID
+            );
+            connections.broadcast(authToken, notification);
+
+            System.out.println("Player " + authToken + " has left the game.");
+        } catch (IOException e) {
+            System.err.println("Failed to handle leave for player: " + authToken + ". Error: " + e.getMessage());
+        }
+    }
+
+    private void handleResign(String authToken, Integer gameID, Session session) {
+        try {
+            // Broadcast resignation notification
+            Notification notification = new Notification(
+                    Notification.Type.RESIGN,
+                    "Player with token " + authToken + " resigned from game " + gameID
+            );
+            connections.broadcast(authToken, notification);
+
+            // Optional: Perform additional logic to update the game state (e.g., in GameDAO)
+            // e.g., gameService.markGameAsCompleted(gameID);
+
+            System.out.println("Player " + authToken + " has resigned from game " + gameID + ".");
+        } catch (IOException e) {
+            System.err.println("Failed to handle resign for player: " + authToken + ". Error: " + e.getMessage());
+        }
+    }
+
 
     private void disconnectPlayer(String playerName) throws IOException {
         connections.remove(playerName);
