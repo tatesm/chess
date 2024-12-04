@@ -24,4 +24,9 @@ public class Connection {
     public void send(String message) throws IOException {
         session.getRemote().sendString(message);
     }
+
+    public Session getSession() {
+        return this.session;
+    }
+
 }

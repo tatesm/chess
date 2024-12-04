@@ -33,11 +33,14 @@ public class Server {
         initializeServices();
         registerRoutes();
 
+        // Register WebSocket route
+        Spark.webSocket("/ws", WebSocketHandler.class);
 
         Spark.init();
         Spark.awaitInitialization();
         return Spark.port();
     }
+
 
     private void initializeDAOs() {
         try {

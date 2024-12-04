@@ -5,6 +5,7 @@ import websocket.messages.Notification;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConnectionManager {
@@ -38,4 +39,14 @@ public class ConnectionManager {
     public Connection getConnection(String playerName) {
         return connections.get(playerName);
     }
+
+    public String getAuthTokenBySession(Session session) {
+        for (Map.Entry<String, Connection> entry : connections.entrySet()) {
+            if (entry.getValue().getSession().equals(session)) {
+                return entry.getKey(); // Return the authToken
+            }
+        }
+        return null; // Return null if no matching session is found
+    }
+
 }
