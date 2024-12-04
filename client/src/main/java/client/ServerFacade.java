@@ -1,5 +1,6 @@
 package client;
 
+import chess.ChessBoard;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -22,9 +23,75 @@ public class ServerFacade {
     private final String serverUrl;
     private final Gson gson;
 
+    private ChessBoard chessBoard; // ChessBoard instance
+
     public ServerFacade(String serverUrl) {
-        this.serverUrl = serverUrl; // Base URL for the server
+        this.serverUrl = serverUrl;
         this.gson = new Gson();
+        this.chessBoard = new ChessBoard();
+        this.chessBoard.resetBoard(); // Initialize board with default pieces
+    }
+
+    public String getBoard(int gameId, String authToken, String playerColor) {
+        String[][] boardDisplay = new String[8][8];
+
+        // Populate board representation
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
+                if (piece != null) {
+                    boardDisplay[row - 1][col - 1] = pieceToDisplay(piece);
+                } else {
+                    boardDisplay[row - 1][col - 1] = EscapeSequences.EMPTY;
+                }
+            }
+        }
+
+        // Adjust for player perspective
+        if (playerColor.equalsIgnoreCase("black")) {
+            boardDisplay = reverseBoard(boardDisplay);
+        }
+
+        return Helper.formatBoard(boardDisplay);
+    }
+
+    private String pieceToDisplay(ChessPiece piece) {
+        String display = "";
+        switch (piece.getPieceType()) {
+            case PAWN:
+                display = piece.getTeamColor() == ChessGame.TeamColor.WHITE
+                        ? EscapeSequences.WHITE_PAWN : EscapeSequences.BLACK_PAWN;
+                break;
+            case ROOK:
+                display = piece.getTeamColor() == ChessGame.TeamColor.WHITE
+                        ? EscapeSequences.WHITE_ROOK : EscapeSequences.BLACK_ROOK;
+                break;
+            case KNIGHT:
+                display = piece.getTeamColor() == ChessGame.TeamColor.WHITE
+                        ? EscapeSequences.WHITE_KNIGHT : EscapeSequences.BLACK_KNIGHT;
+                break;
+            case BISHOP:
+                display = piece.getTeamColor() == ChessGame.TeamColor.WHITE
+                        ? EscapeSequences.WHITE_BISHOP : EscapeSequences.BLACK_BISHOP;
+                break;
+            case QUEEN:
+                display = piece.getTeamColor() == ChessGame.TeamColor.WHITE
+                        ? EscapeSequences.WHITE_QUEEN : EscapeSequences.BLACK_QUEEN;
+                break;
+            case KING:
+                display = piece.getTeamColor() == ChessGame.TeamColor.WHITE
+                        ? EscapeSequences.WHITE_KING : EscapeSequences.BLACK_KING;
+                break;
+        }
+        return display;
+    }
+
+    private String[][] reverseBoard(String[][] board) {
+        String[][] reversedBoard = new String[board.length][board[0].length];
+        for (int i = 0; i < board.length; i++) {
+            reversedBoard[i] = board[board.length - 1 - i];
+        }
+        return reversedBoard;
     }
 
     public AuthData register(String username, String password, String email) throws Exception {
@@ -191,51 +258,6 @@ public class ServerFacade {
         try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
             reader.read();  // Just consume response to ensure connection resources are released
         }
-    }
-
-
-    public String getBoard(int gameId, String authToken, String playerColor) throws Exception {
-        // Simulated board representation
-        String[][] board = new String[][]{
-                {EscapeSequences.BLACK_ROOK, EscapeSequences.BLACK_KNIGHT, EscapeSequences.BLACK_BISHOP,
-                        EscapeSequences.BLACK_QUEEN, EscapeSequences.BLACK_KING, EscapeSequences.BLACK_BISHOP,
-                        EscapeSequences.BLACK_KNIGHT, EscapeSequences.BLACK_ROOK},
-                {EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN,
-                        EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN,
-                        EscapeSequences.BLACK_PAWN, EscapeSequences.BLACK_PAWN},
-                {EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY,
-                        EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY,
-                        EscapeSequences.EMPTY, EscapeSequences.EMPTY},
-                {EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY,
-                        EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY},
-                {EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY,
-                        EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY},
-                {EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY,
-                        EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY, EscapeSequences.EMPTY},
-                {EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN,
-                        EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN,
-                        EscapeSequences.WHITE_PAWN, EscapeSequences.WHITE_PAWN},
-                {EscapeSequences.WHITE_ROOK, EscapeSequences.WHITE_KNIGHT, EscapeSequences.WHITE_BISHOP,
-                        EscapeSequences.WHITE_QUEEN, EscapeSequences.WHITE_KING, EscapeSequences.WHITE_BISHOP,
-                        EscapeSequences.WHITE_KNIGHT, EscapeSequences.WHITE_ROOK}
-        };
-
-        // Adjust board orientation based on the player's color
-        if (playerColor.equalsIgnoreCase("black")) {
-            board = reverseBoard(board);
-        }
-        return Helper.formatBoard(board); // Use formatBoard to build the display
-
-        //NUKE this, use chessboard object
-    }
-
-
-    private String[][] reverseBoard(String[][] board) {
-        String[][] reversedBoard = new String[board.length][board[0].length];
-        for (int i = 0; i < board.length; i++) {
-            reversedBoard[i] = board[board.length - 1 - i];
-        }
-        return reversedBoard;
     }
 
 
