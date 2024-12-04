@@ -5,6 +5,7 @@ import dataaccess.*;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
+import server.websocket.WebSocketHandler;
 import service.ClearService;
 import service.GameService;
 import service.UserService;
@@ -31,6 +32,17 @@ public class Server {
         initializeDAOs();
         initializeServices();
         registerRoutes();
+
+        // Initialize WebSocket
+        try {
+            org.eclipse.jetty.server.Server server = new org.eclipse.jetty.server.Server(desiredPort);
+            WebSocketServerContainerInitializer.configureContext(server.getServletContext())
+                    .addEndpoint(WebSocketHandler.class);
+            server.start();
+            server.join();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize WebSocket: " + e.getMessage());
+        }
 
         Spark.init();
         Spark.awaitInitialization();
