@@ -6,8 +6,8 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
-import webSocketMessages.Action;
-import webSocketMessages.Notification;
+import server.websocketmessages.Action;
+import server.websocketmessages.Notification;
 
 import java.io.IOException;
 
@@ -39,10 +39,14 @@ public class WebSocketHandler {
         System.out.println("Connection closed: " + session + " due to " + reason);
     }
 
-    private void connectPlayer(String playerName, Session session) throws IOException {
-        connections.add(playerName, session);
-        Notification notification = new Notification(Notification.Type.CONNECT, playerName + " joined the game.");
-        connections.broadcast(playerName, notification);
+    private void connectPlayer(String playerName, Session session) {
+        try {
+            connections.add(playerName, session);
+            Notification notification = new Notification(Notification.Type.CONNECT, playerName + " joined the game.");
+            connections.broadcast(playerName, notification);
+        } catch (IOException e) {
+            System.err.println("Failed to connect player: " + e.getMessage());
+        }
     }
 
     private void handleMove(String playerName, String move) throws IOException {
@@ -55,5 +59,14 @@ public class WebSocketHandler {
         Notification notification = new Notification(Notification.Type.DISCONNECT, playerName + " left the game.");
         connections.broadcast(playerName, notification);
     }
+
+    private void notifyPlayer(Session session, String message) {
+        try {
+            session.getRemote().sendString(message);
+        } catch (IOException e) {
+            System.err.println("Failed to notify player: " + e.getMessage());
+        }
+    }
+
 }
 

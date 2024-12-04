@@ -1,6 +1,6 @@
 package server.websocket;
 
-import webSocketMessages.Notification;
+import server.websocketmessages.Notification;
 
 import java.io.IOException;
 import java.util.ArrayList;
