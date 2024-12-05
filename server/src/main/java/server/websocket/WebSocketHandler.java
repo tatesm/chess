@@ -78,6 +78,8 @@ public class WebSocketHandler {
             // Create and send a Notification message to all other clients
             String notificationMessage = authToken + " joined as " + playerColor;
             Notification notification = new Notification(notificationMessage);
+
+            // Ensure root client is excluded from broadcast
             connections.broadcast(authToken, notification);
 
         } catch (Exception e) {

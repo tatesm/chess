@@ -32,7 +32,8 @@ public class ConnectionManager {
         for (Connection connection : connections.values()) {
             if (connection.isOpen() && !connection.getPlayerName().equals(excludePlayer)) {
                 try {
-                    String json = new Gson().toJson(message); // Serialize ServerMessage to JSON
+                    System.out.println("Broadcasting to: " + connection.getPlayerName()); // Debug log
+                    String json = gson.toJson(message);
                     connection.send(json);
                 } catch (IOException e) {
                     System.err.println("Failed to send message to: " + connection.getPlayerName());
@@ -40,6 +41,7 @@ public class ConnectionManager {
             }
         }
     }
+
 
     public void sendToRoot(String rootPlayer, ServerMessage message) {
         Connection rootConnection = connections.get(rootPlayer);
