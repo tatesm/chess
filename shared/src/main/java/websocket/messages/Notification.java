@@ -1,24 +1,12 @@
 package websocket.messages;
 
-public class Notification {
-    public enum Type {
-        CONNECT,
-        MOVE,
-        RESIGN,
-        DISCONNECT
-    }
+public class Notification extends ServerMessage {
 
-    private final Type type;
     private final String message;
 
-    public Notification(Type type, String message) {
-        this.type = type;
+    public Notification(String message) {
+        super(ServerMessageType.NOTIFICATION);
         this.message = message;
-    }
-
-    // Getter methods for Gson or other libraries
-    public Type getType() {
-        return type;
     }
 
     public String getMessage() {

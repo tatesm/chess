@@ -41,6 +41,18 @@ public class ConnectionManager {
         }
     }
 
+    public void sendToRoot(String rootPlayer, ServerMessage message) {
+        Connection rootConnection = connections.get(rootPlayer);
+        if (rootConnection != null && rootConnection.isOpen()) {
+            try {
+                String json = gson.toJson(message); // Serialize ServerMessage to JSON
+                rootConnection.send(json);
+            } catch (IOException e) {
+                System.err.println("Failed to send message to root client: " + rootPlayer);
+            }
+        }
+    }
+
 
     public Connection getConnection(String playerName) {
         return connections.get(playerName);

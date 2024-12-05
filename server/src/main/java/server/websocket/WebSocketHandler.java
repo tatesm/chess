@@ -9,6 +9,7 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import websocket.messages.Notification;
 import websocket.messages.ServerMessage;
 
 import java.io.IOException;
@@ -47,13 +48,42 @@ public class WebSocketHandler {
 
     private void connectPlayer(String authToken, Integer gameID, Session session) {
         try {
+            // Add root client to connections
             connections.add(authToken, session);
+
+            // Retrieve the game data for the given game ID
             GameData gameData = gameDAO.getGame(gameID);
 
+            // If game data doesn't exist, send an error message to the root client
+            if (gameData == null) {
+                ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                connections.sendToRoot(authToken, errorMessage);
+                return;
+            }
+
+            // Determine the player's color
+            String playerColor;
+            if (authToken.equals(gameData.getWhiteUsername())) {
+                playerColor = "white";
+            } else if (authToken.equals(gameData.getBlackUsername())) {
+                playerColor = "black";
+            } else {
+                playerColor = "observer"; // Default to observer if not a player
+            }
+
+            // Send a LOAD_GAME message to the root client
             ServerMessage.LoadGameMessage loadGameMessage = new ServerMessage.LoadGameMessage(gameData);
-            connections.broadcast(authToken, loadGameMessage);
+            connections.sendToRoot(authToken, loadGameMessage);
+
+            // Create and send a Notification message to all other clients
+            String notificationMessage = authToken + " joined as " + playerColor;
+            Notification notification = new Notification(notificationMessage);
+            connections.broadcast(authToken, notification);
+
         } catch (Exception e) {
             System.err.println("Error connecting player: " + e.getMessage());
         }
     }
+
+
 }
