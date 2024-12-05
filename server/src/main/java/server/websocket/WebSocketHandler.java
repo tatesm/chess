@@ -1,13 +1,14 @@
 package server.websocket;
 
 import com.google.gson.Gson;
+import chess.ChessGame;
+import dataaccess.GameDAO;
+import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
-import websocket.commands.UserGameCommand;
-import websocket.messages.Notification;
 import websocket.messages.ServerMessage;
 
 import java.io.IOException;
@@ -16,25 +17,22 @@ import java.io.IOException;
 public class WebSocketHandler {
 
     private final ConnectionManager connections = new ConnectionManager();
+    private final GameDAO gameDAO = new GameDAO(); // Ensure this is properly initialized
     private final Gson gson = new Gson();
 
     @OnWebSocketConnect
     public void onConnect(Session session) {
-        String authToken = "some_token"; // Extract auth token from session or request
+        String authToken = "some_token"; // Replace with actual extraction logic
         connections.add(authToken, session);
         System.out.println("New connection established: " + authToken);
     }
 
-
     @OnWebSocketMessage
     public void onMessage(Session session, String message) throws IOException {
-        UserGameCommand command = gson.fromJson(message, UserGameCommand.class);
-
+        var command = gson.fromJson(message, websocket.commands.UserGameCommand.class);
         switch (command.getCommandType()) {
             case CONNECT -> connectPlayer(command.getAuthToken(), command.getGameID(), session);
-            case MAKE_MOVE -> handleMove(command.getAuthToken(), command.getGameID());
-            case LEAVE -> handleLeave(command.getAuthToken());
-            case RESIGN -> handleResign(command.getAuthToken(), command.getGameID());
+            default -> System.out.println("Unhandled command type");
         }
     }
 
@@ -48,30 +46,14 @@ public class WebSocketHandler {
     }
 
     private void connectPlayer(String authToken, Integer gameID, Session session) {
-        connections.add(authToken, session);
-        // Create the ServerMessage
-        ServerMessage loadGameMessage = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
-        // Broadcast the message
-        connections.broadcast(authToken, loadGameMessage);
-    }
+        try {
+            connections.add(authToken, session);
+            GameData gameData = gameDAO.getGame(gameID);
 
-
-    private void handleMove(String authToken, Integer gameID) {
-        ServerMessage moveMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-        connections.broadcast(authToken, moveMessage);
-    }
-
-
-    private void handleLeave(String authToken) {
-        connections.remove(authToken);
-        ServerMessage disconnectMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-        connections.broadcast(authToken, disconnectMessage);
-        System.out.println("Player " + authToken + " has left the game.");
-    }
-
-    private void handleResign(String authToken, Integer gameID) {
-        ServerMessage resignMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-        connections.broadcast(authToken, resignMessage);
-        System.out.println("Player " + authToken + " has resigned from game " + gameID + ".");
+            ServerMessage.LoadGameMessage loadGameMessage = new ServerMessage.LoadGameMessage(gameData);
+            connections.broadcast(authToken, loadGameMessage);
+        } catch (Exception e) {
+            System.err.println("Error connecting player: " + e.getMessage());
+        }
     }
 }

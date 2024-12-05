@@ -25,5 +25,6 @@ public class Notification {
         return message;
     }
 
+
     // Removed toString() to let Gson handle JSON conversion
 }
