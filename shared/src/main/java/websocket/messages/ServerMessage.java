@@ -61,6 +61,39 @@ public class ServerMessage {
         }
     }
 
+    // Subclass to handle ERROR messages
+    public static class ErrorMessage extends ServerMessage {
+        private final String errorMessage;
+
+        public ErrorMessage(String errorMessage) {
+            super(ServerMessageType.ERROR);
+            this.errorMessage = errorMessage;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof ErrorMessage)) {
+                return false;
+            }
+            if (!super.equals(o)) {
+                return false;
+            }
+            ErrorMessage that = (ErrorMessage) o;
+            return Objects.equals(getErrorMessage(), that.getErrorMessage());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), getErrorMessage());
+        }
+    }
 
     @Override
     public boolean equals(Object o) {

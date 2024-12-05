@@ -56,7 +56,7 @@ public class WebSocketHandler {
 
             // If game data doesn't exist, send an error message to the root client
             if (gameData == null) {
-                ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Invalid game ID: " + gameID);
                 connections.sendToRoot(authToken, errorMessage);
                 return;
             }
@@ -79,11 +79,13 @@ public class WebSocketHandler {
             String notificationMessage = authToken + " joined as " + playerColor;
             Notification notification = new Notification(notificationMessage);
 
-            // Ensure root client is excluded from broadcast
+            // Broadcast to all clients excluding the root client
             connections.broadcast(authToken, notification);
 
         } catch (Exception e) {
-            System.err.println("Error connecting player: " + e.getMessage());
+            // Send a detailed error message to the root client in case of any exception
+            ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Server error: " + e.getMessage());
+            connections.sendToRoot(authToken, errorMessage);
         }
     }
 
