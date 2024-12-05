@@ -4,7 +4,8 @@ public class Notification {
     public enum Type {
         CONNECT,
         MOVE,
-        RESIGN, DISCONNECT
+        RESIGN,
+        DISCONNECT
     }
 
     private final Type type;
@@ -15,8 +16,14 @@ public class Notification {
         this.message = message;
     }
 
-    @Override
-    public String toString() {
-        return String.format("{\"type\":\"%s\",\"message\":\"%s\"}", type, message);
+    // Getter methods for Gson or other libraries
+    public Type getType() {
+        return type;
     }
+
+    public String getMessage() {
+        return message;
+    }
+
+    // Removed toString() to let Gson handle JSON conversion
 }

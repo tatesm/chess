@@ -1,17 +1,17 @@
 package server.websocket;
 
+import com.google.gson.Gson;
 import org.eclipse.jetty.websocket.api.Session;
 import websocket.messages.Notification;
+import websocket.messages.ServerMessage;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConnectionManager {
     private final ConcurrentHashMap<String, Connection> connections = new ConcurrentHashMap<>();
-
     private final ConcurrentHashMap<Session, String> sessionToAuthToken = new ConcurrentHashMap<>();
+    private final Gson gson = new Gson(); // Create a Gson instance for JSON serialization
 
     public void add(String playerName, Session session) {
         var connection = new Connection(playerName, session);
@@ -24,19 +24,18 @@ public class ConnectionManager {
         System.out.println("Connection removed for player: " + playerName);
     }
 
-
     public String getAuthTokenBySession(Session session) {
         return sessionToAuthToken.get(session);
     }
 
-
-    public void broadcast(String excludePlayer, Notification notification) {
+    public void broadcast(String excludePlayer, ServerMessage message) {
         for (Connection connection : connections.values()) {
             if (connection.isOpen() && !connection.getPlayerName().equals(excludePlayer)) {
                 try {
-                    connection.send(notification.toString());
+                    String json = new Gson().toJson(message); // Serialize ServerMessage to JSON
+                    connection.send(json);
                 } catch (IOException e) {
-                    System.err.println("Failed to send notification to: " + connection.getPlayerName());
+                    System.err.println("Failed to send message to: " + connection.getPlayerName());
                 }
             }
         }
@@ -46,6 +45,4 @@ public class ConnectionManager {
     public Connection getConnection(String playerName) {
         return connections.get(playerName);
     }
-
-
 }

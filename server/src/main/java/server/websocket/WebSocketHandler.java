@@ -8,6 +8,7 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import websocket.commands.UserGameCommand;
 import websocket.messages.Notification;
+import websocket.messages.ServerMessage;
 
 import java.io.IOException;
 
@@ -48,25 +49,29 @@ public class WebSocketHandler {
 
     private void connectPlayer(String authToken, Integer gameID, Session session) {
         connections.add(authToken, session);
-        Notification notification = new Notification(Notification.Type.CONNECT, "Player connected to game " + gameID);
-        connections.broadcast(authToken, notification);
+        // Create the ServerMessage
+        ServerMessage loadGameMessage = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        // Broadcast the message
+        connections.broadcast(authToken, loadGameMessage);
     }
 
+
     private void handleMove(String authToken, Integer gameID) {
-        Notification notification = new Notification(Notification.Type.MOVE, "Move made in game " + gameID + " by " + authToken);
-        connections.broadcast(authToken, notification);
+        ServerMessage moveMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+        connections.broadcast(authToken, moveMessage);
     }
+
 
     private void handleLeave(String authToken) {
         connections.remove(authToken);
-        Notification notification = new Notification(Notification.Type.DISCONNECT, "Player " + authToken + " left the game.");
-        connections.broadcast(authToken, notification);
+        ServerMessage disconnectMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+        connections.broadcast(authToken, disconnectMessage);
         System.out.println("Player " + authToken + " has left the game.");
     }
 
     private void handleResign(String authToken, Integer gameID) {
-        Notification notification = new Notification(Notification.Type.RESIGN, "Player " + authToken + " resigned from game " + gameID);
-        connections.broadcast(authToken, notification);
+        ServerMessage resignMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+        connections.broadcast(authToken, resignMessage);
         System.out.println("Player " + authToken + " has resigned from game " + gameID + ".");
     }
 }
