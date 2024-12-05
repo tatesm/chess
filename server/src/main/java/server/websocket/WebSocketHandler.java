@@ -76,11 +76,9 @@ public class WebSocketHandler {
             connections.sendToRoot(authToken, loadGameMessage);
 
             // Create and send a Notification message to all other clients
-            String notificationMessage = authToken + " joined as " + playerColor;
+            String notificationMessage = gameData.getGameName() + " | " + authToken + " joined as " + playerColor;
             Notification notification = new Notification(notificationMessage);
-
-            // Broadcast to all clients excluding the root client
-            connections.broadcast(authToken, notification);
+            connections.broadcast(authToken, notification); // Excludes the root client from broadcast
 
         } catch (Exception e) {
             // Send a detailed error message to the root client in case of any exception

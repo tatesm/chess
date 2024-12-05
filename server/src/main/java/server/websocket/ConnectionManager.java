@@ -30,15 +30,21 @@ public class ConnectionManager {
 
     public void broadcast(String excludePlayer, ServerMessage message) {
         for (Connection connection : connections.values()) {
+            System.out.println("Attempting to broadcast to: " + connection.getPlayerName());
             if (connection.isOpen() && !connection.getPlayerName().equals(excludePlayer)) {
                 try {
-                    System.out.println("Broadcasting to: " + connection.getPlayerName()); // Debug log
                     String json = gson.toJson(message);
                     connection.send(json);
+                    System.out.println("Broadcasting to: " + connection.getPlayerName());
                 } catch (IOException e) {
                     System.err.println("Failed to send message to: " + connection.getPlayerName());
                 }
+            } else {
+                System.out.println("Excluding player: " + connection.getPlayerName() + " from broadcast.");
             }
+            System.out.println("Root player authToken to exclude: " + excludePlayer);
+            System.out.println("Connection playerName: " + connection.getPlayerName());
+
         }
     }
 
@@ -48,10 +54,15 @@ public class ConnectionManager {
         if (rootConnection != null && rootConnection.isOpen()) {
             try {
                 String json = gson.toJson(message); // Serialize ServerMessage to JSON
+                System.out.println("Sending to root player: " + rootPlayer);
+                System.out.println("Message content: " + json);
                 rootConnection.send(json);
             } catch (IOException e) {
                 System.err.println("Failed to send message to root client: " + rootPlayer);
+                e.printStackTrace();
             }
+        } else {
+            System.err.println("No open connection found for root player: " + rootPlayer);
         }
     }
 
