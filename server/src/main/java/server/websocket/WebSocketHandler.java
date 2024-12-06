@@ -17,9 +17,6 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import websocket.messages.Notification;
 import websocket.messages.ServerMessage;
 
-
-import java.io.IOException;
-
 @WebSocket
 public class WebSocketHandler {
 
@@ -104,6 +101,7 @@ public class WebSocketHandler {
         }
     }
 
+
     private void handleLeave(String authToken, Integer gameID, Session session) {
         try {
             // Validate auth token
@@ -122,30 +120,30 @@ public class WebSocketHandler {
                 return;
             }
 
-            // Ensure player is part of the game
+            // Check if the client is a player
             String username = authData.username();
             boolean isWhitePlayer = username.equals(gameData.getWhiteUsername());
             boolean isBlackPlayer = username.equals(gameData.getBlackUsername());
-            if (!isWhitePlayer && !isBlackPlayer) {
-                System.out.println("Player not part of the game: " + username);
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Player not part of the game."));
-                return;
-            }
 
-            // Remove player from the game
-            if (isWhitePlayer) {
-                gameData.setWhiteUsername(null);
-            } else if (isBlackPlayer) {
-                gameData.setBlackUsername(null);
-            }
+            if (isWhitePlayer || isBlackPlayer) {
+                // Update the game data to remove the player
+                if (isWhitePlayer) {
+                    gameData.setWhiteUsername(null);
+                } else {
+                    gameData.setBlackUsername(null);
+                }
 
-            // Update the game in the database
-            gameDAO.updateGame(gameData);
+                // Update the game in the database
+                gameDAO.updateGame(gameData);
 
-            // Notify other clients about the leave
-            String leaveNotification = username + " has left the game.";
-            Notification notification = new Notification(leaveNotification);
-            connections.broadcast(authToken, notification);
+                // Notify other clients
+                String leaveNotification = username + " has left the game.";
+                Notification notification = new Notification(leaveNotification);
+                connections.broadcast(authToken, notification);
+            } // when observers leave, the other observer and remaining players get notified
+
+            // Remove the connection
+            connections.remove(authToken);
 
         } catch (Exception e) {
             System.err.println("Error processing leave: " + e.getMessage());
@@ -177,7 +175,7 @@ public class WebSocketHandler {
                 System.out.println("Attempted move after game is over.");
                 connections.sendToRoot(session, new ServerMessage.ErrorMessage("The game is over. No further moves are allowed."));
                 return;
-            }
+            }//add column or vairable to gameData or chessboard, boolean if game is resigned, end game for everyone
 
             // Ensure player is part of the game
             String username = authData.username();
@@ -244,6 +242,7 @@ public class WebSocketHandler {
 
     private void handleResign(String authToken, Integer gameID, Session session) {
         try {
+            //black/whtie cannot resign after the other has already resigned.
             // Validate the authToken
             AuthData authData = authDAO.getAuth(authToken);
             if (authData == null) {
