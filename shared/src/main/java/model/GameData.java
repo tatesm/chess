@@ -9,7 +9,7 @@ public class GameData {
     private String blackUsername;
     private String gameName;
     private ChessGame game;
-
+    private boolean resigned;
 
     public GameData(int gameID, String gameName, ChessGame game) {
         this.gameID = gameID;
@@ -50,5 +50,17 @@ public class GameData {
         return game;
     }
 
+    public void setResigned(boolean resigned) {
+        this.resigned = resigned;
+    }
+
+    /**
+     * Checks if the game has been resigned.
+     *
+     * @return true if the game is resigned, false otherwise
+     */
+    public boolean isResigned() {
+        return resigned;
+    }
 }
 

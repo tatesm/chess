@@ -9,38 +9,53 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ConnectionManager {
     private final ConcurrentHashMap<String, Connection> connections = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, ConcurrentHashMap<String, Connection>> gameConnections = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Session, String> sessionToAuthToken = new ConcurrentHashMap<>();
     private final Gson gson = new Gson();
-// track which players are in which games, dont send messages meant for one game to another game
 
     /**
-     * Adds a new connection for a player.
+     * Adds a new connection for a player in a specific game.
      *
      * @param playerName the player's name or auth token
      * @param session    the WebSocket session
+     * @param gameID     the ID of the game the player is joining
      */
-    public void add(String playerName, Session session) {
+    public void add(String playerName, Session session, int gameID) {
         var connection = new Connection(playerName, session);
         connections.put(playerName, connection);
-        sessionToAuthToken.put(session, playerName); // Map session to playerName
-        System.out.println("Connection added for player: " + playerName);
+        sessionToAuthToken.put(session, playerName);
+
+        gameConnections.computeIfAbsent(gameID, k -> new ConcurrentHashMap<>())
+                .put(playerName, connection);
+
+        System.out.println("Connection added for player: " + playerName + " in game: " + gameID);
     }
 
     /**
-     * Removes a connection by player name.
+     * Removes a connection by player name and game ID.
      *
      * @param playerName the player's name or auth token
+     * @param gameID     the ID of the game
      */
-    public void remove(String playerName) {
+    public void remove(String playerName, int gameID) {
         Connection connection = connections.remove(playerName);
         if (connection != null) {
-            sessionToAuthToken.remove(connection.getSession()); // Remove session mapping
+            sessionToAuthToken.remove(connection.getSession());
         }
-        System.out.println("Connection removed for player: " + playerName);
+
+        ConcurrentHashMap<String, Connection> gamePlayers = gameConnections.get(gameID);
+        if (gamePlayers != null) {
+            gamePlayers.remove(playerName);
+            if (gamePlayers.isEmpty()) {
+                gameConnections.remove(gameID); // Clean up empty games
+            }
+        }
+
+        System.out.println("Connection removed for player: " + playerName + " from game: " + gameID);
     }
 
     /**
-     * Removes an observer based on session.
+     * Removes an observer by session.
      *
      * @param session the WebSocket session to remove
      */
@@ -48,9 +63,52 @@ public class ConnectionManager {
         String authToken = sessionToAuthToken.remove(session);
         if (authToken != null) {
             connections.remove(authToken);
+            gameConnections.values().forEach(game -> game.remove(authToken));
             System.out.println("Observer removed for token: " + authToken);
         }
     }
+
+    public Integer getGameIDByAuthToken(String authToken) {
+        for (var entry : gameConnections.entrySet()) {
+            Integer gameID = entry.getKey();
+            ConcurrentHashMap<String, Connection> gamePlayers = entry.getValue();
+            if (gamePlayers.containsKey(authToken)) {
+                return gameID; // Return the game ID if the player is found
+            }
+        }
+        return null; // Return null if no game ID is associated with the auth token
+    }
+
+    /**
+     * Broadcasts a message to all connected clients in a specific game,
+     * excluding a specific player.
+     *
+     * @param gameID        the ID of the game
+     * @param excludePlayer the player to exclude from the broadcast
+     * @param message       the message to broadcast
+     */
+    public void broadcastToGame(int gameID, String excludePlayer, ServerMessage message) {
+        ConcurrentHashMap<String, Connection> gamePlayers = gameConnections.get(gameID);
+        if (gamePlayers == null) {
+            System.out.println("No players found for game ID: " + gameID);
+            return;
+        }
+
+        for (Connection connection : gamePlayers.values()) {
+            if (connection.isOpen() && !connection.getPlayerName().equals(excludePlayer)) {
+                try {
+                    String json = gson.toJson(message);
+                    connection.send(json);
+                    System.out.println("Broadcasting to: " + connection.getPlayerName() + " in game: " + gameID);
+                } catch (IOException e) {
+                    System.err.println("Failed to send message to: " + connection.getPlayerName());
+                }
+            } else {
+                System.out.println("Excluding player: " + connection.getPlayerName() + " from broadcast.");
+            }
+        }
+    }
+
 
     /**
      * Retrieves the auth token associated with a session.

@@ -50,14 +50,20 @@ public class WebSocketHandler {
     public void onClose(Session session, int statusCode, String reason) {
         String authToken = connections.getAuthTokenBySession(session);
         if (authToken != null) {
-            connections.remove(authToken);
-            System.out.println("Connection closed: " + authToken + " Reason: " + reason);
+            // Retrieve the game ID associated with the auth token
+            Integer gameID = connections.getGameIDByAuthToken(authToken);
+            if (gameID != null) {
+                connections.remove(authToken, gameID); // Pass both authToken and gameID
+                System.out.println("Connection closed for player: " + authToken + " in game ID: " + gameID + ". Reason: " + reason);
+            } else {
+                System.out.println("No game ID found for player: " + authToken + ". Reason: " + reason);
+            }
         }
     }
 
+
     private void connectPlayer(String authToken, Integer gameID, Session session) {
         try {
-
             // Retrieve the game data for the given game ID
             GameData gameData = gameDAO.getGame(gameID);
             AuthData authData = authDAO.getAuth(authToken);
@@ -71,29 +77,30 @@ public class WebSocketHandler {
             }
 
             // Validate authToken
-            if (!authToken.equals(authData.authToken()) && !authToken.equals(gameData.getBlackUsername())) {
+            if (authData == null || !authToken.equals(authData.authToken())) {
                 System.out.println("Invalid auth token: " + authToken);
                 ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Invalid auth token.");
                 connections.sendToRoot(session, errorMessage);
                 return;
             }
-            connections.add(authToken, session);
+
+            // Add connection with game context
+            connections.add(authToken, session, gameID);
 
             // Determine the player's color
-            String playerColor = authData.username().equals(gameData.getWhiteUsername()) ? "white" :
-                    authData.username().equals(gameData.getBlackUsername()) ? "black" : "observer";
+            String playerColor = authData.username().equals(gameData.getWhiteUsername()) ? "white"
+                    : authData.username().equals(gameData.getBlackUsername()) ? "black" : "observer";
 
             // Send a LOAD_GAME message to the root client
             ServerMessage.LoadGameMessage loadGameMessage = new ServerMessage.LoadGameMessage(gameData);
-            System.out.println("Sending LOAD_GAME to root client: " + authToken);
             connections.sendToRoot(session, loadGameMessage);
 
-            // Notify other clients (broadcast)
-            String notificationMessage = gameData.getGameName() + " | " + authToken + " joined as " + playerColor;
+            // Notify other clients in the same game
+            String notificationMessage = authData.username() + " joined as " + playerColor;
             Notification notification = new Notification(notificationMessage);
-            System.out.println("Broadcasting NOTIFICATION to other players.");
-            connections.broadcast(authToken, notification);
+            connections.broadcastToGame(gameID, authToken, notification);
 
+            System.out.println(authData.username() + " connected to game ID: " + gameID);
         } catch (Exception e) {
             System.err.println("Error connecting player: " + e.getMessage());
             ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Server error: " + e.getMessage());
@@ -139,11 +146,20 @@ public class WebSocketHandler {
                 // Notify other clients
                 String leaveNotification = username + " has left the game.";
                 Notification notification = new Notification(leaveNotification);
-                connections.broadcast(authToken, notification);
-            } // when observers leave, the other observer and remaining players get notified
+
+                // Broadcast notification to all players in the game (except the leaving player)
+                connections.broadcastToGame(gameID, authToken, notification);
+
+            } else {
+                // If the leaving client is an observer
+                connections.removeObserver(session);
+                String leaveNotification = "An observer has left the game.";
+                Notification notification = new Notification(leaveNotification);
+                connections.broadcastToGame(gameID, authToken, notification);
+            }
 
             // Remove the connection
-            connections.remove(authToken);
+            connections.remove(authToken, gameID);
 
         } catch (Exception e) {
             System.err.println("Error processing leave: " + e.getMessage());
@@ -242,13 +258,11 @@ public class WebSocketHandler {
 
     private void handleResign(String authToken, Integer gameID, Session session) {
         try {
-            //black/whtie cannot resign after the other has already resigned.
-            // Validate the authToken
+            // Validate the auth token
             AuthData authData = authDAO.getAuth(authToken);
             if (authData == null) {
                 System.out.println("Invalid auth token: " + authToken);
-                ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Invalid auth token.");
-                connections.sendToRoot(session, errorMessage);
+                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid auth token."));
                 return;
             }
 
@@ -256,34 +270,48 @@ public class WebSocketHandler {
             GameData gameData = gameDAO.getGame(gameID);
             if (gameData == null) {
                 System.out.println("Invalid game ID: " + gameID);
-                ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Invalid game ID.");
-                connections.sendToRoot(session, errorMessage);
+                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid game ID."));
                 return;
             }
 
-            // Ensure player is part of the game
+            // Ensure the game is not already over
+            if (gameData.getGame().getBoard() == null) { // Null board indicates the game is over
+                System.out.println("Attempted to resign after the game is already over.");
+                connections.sendToRoot(session, new ServerMessage.ErrorMessage("The game is already over. You cannot resign."));
+                return;
+            }
+
+            // Ensure the player is part of the game
             String username = authData.username();
             if (!username.equals(gameData.getWhiteUsername()) && !username.equals(gameData.getBlackUsername())) {
                 System.out.println("Player not part of the game: " + username);
-                ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Player not part of the game.");
-                connections.sendToRoot(session, errorMessage);
+                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Player not part of the game."));
+                return;
+            }
+
+            // Prevent double resignation
+            if (gameData.isResigned()) {
+                System.out.println("Double resignation detected for game ID " + gameID);
+                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Resignation already occurred. The game is over."));
                 return;
             }
 
             // Mark the game as over
             ChessGame game = gameData.getGame();
-            game.setBoard(null); // Clear the board or add a specific game-over flag
+            gameData.setResigned(true); // Mark the game as resigned
+            game.setBoard(null); // Clear the board to indicate game over
             gameDAO.updateGame(gameData);
 
-            // Notify all clients (including the resigning client)
+            // Notify all other players and observers
             String resignationMessage = username + " has resigned. The game is over.";
             Notification notification = new Notification(resignationMessage);
-            connections.broadcast(null, notification);
+            connections.broadcastToGame(gameID, authToken, notification); // Exclude the resigning player
+
+            System.out.println("Game ID " + gameID + " marked as over due to resignation by: " + username);
 
         } catch (Exception e) {
             System.err.println("Error processing resignation: " + e.getMessage());
-            ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Server error: " + e.getMessage());
-            connections.sendToRoot(session, errorMessage);
+            connections.sendToRoot(session, new ServerMessage.ErrorMessage("Server error: " + e.getMessage()));
         }
     }
 
