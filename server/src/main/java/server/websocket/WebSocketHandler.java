@@ -227,7 +227,7 @@ public class WebSocketHandler {
 
             // Broadcast updated game state to all clients
             ServerMessage.LoadGameMessage loadGameMessage = new ServerMessage.LoadGameMessage(gameData);
-            connections.broadcast(null, loadGameMessage);
+            connections.broadcastToGame(gameID, null, loadGameMessage);
 
             // Notify other clients about the move
             String moveNotification = username + " moved from " + move.getStartPosition() + " to " + move.getEndPosition();
@@ -235,18 +235,18 @@ public class WebSocketHandler {
                 moveNotification += ", promoting to " + move.getPromotionPiece();
             }
             Notification notification = new Notification(moveNotification);
-            connections.broadcast(authToken, notification);
+            connections.broadcastToGame(gameID, authToken, notification);
 
             // Check for endgame scenarios
             if (game.isInCheckmate(game.getTeamTurn())) {
                 Notification checkmateNotification = new Notification("Checkmate! " + game.getTeamTurn() + " loses.");
-                connections.broadcast(null, checkmateNotification);
+                connections.broadcastToGame(gameID, null, checkmateNotification);
             } else if (game.isInStalemate(game.getTeamTurn())) {
                 Notification stalemateNotification = new Notification("Stalemate! The game is a draw.");
-                connections.broadcast(null, stalemateNotification);
+                connections.broadcastToGame(gameID, null, stalemateNotification);
             } else if (game.isInCheck(game.getTeamTurn())) {
                 Notification checkNotification = new Notification(game.getTeamTurn() + " is in check.");
-                connections.broadcast(null, checkNotification);
+                connections.broadcastToGame(gameID, null, checkNotification);
             }
 
         } catch (Exception e) {
@@ -275,6 +275,7 @@ public class WebSocketHandler {
             }
 
             // Ensure the game is not already over
+            // do new varible, is game over, if true, end game
             if (gameData.getGame().getBoard() == null) { // Null board indicates the game is over
                 System.out.println("Attempted to resign after the game is already over.");
                 connections.sendToRoot(session, new ServerMessage.ErrorMessage("The game is already over. You cannot resign."));
@@ -302,10 +303,10 @@ public class WebSocketHandler {
             game.setBoard(null); // Clear the board to indicate game over
             gameDAO.updateGame(gameData);
 
-            // Notify all other players and observers
+            // Notify all players and observers, including the resigning player
             String resignationMessage = username + " has resigned. The game is over.";
             Notification notification = new Notification(resignationMessage);
-            connections.broadcastToGame(gameID, authToken, notification); // Exclude the resigning player
+            connections.broadcastToGame(gameID, null, notification);
 
             System.out.println("Game ID " + gameID + " marked as over due to resignation by: " + username);
 

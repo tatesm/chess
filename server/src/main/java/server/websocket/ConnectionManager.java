@@ -126,21 +126,7 @@ public class ConnectionManager {
      * @param excludePlayer the player to exclude from the broadcast
      * @param message       the message to broadcast
      */
-    public void broadcast(String excludePlayer, ServerMessage message) {
-        for (Connection connection : connections.values()) {
-            if (connection.isOpen() && !connection.getPlayerName().equals(excludePlayer)) {
-                try {
-                    String json = gson.toJson(message);
-                    connection.send(json);
-                    System.out.println("Broadcasting to: " + connection.getPlayerName());
-                } catch (IOException e) {
-                    System.err.println("Failed to send message to: " + connection.getPlayerName());
-                }
-            } else {
-                System.out.println("Excluding player: " + connection.getPlayerName() + " from broadcast.");
-            }
-        }
-    }
+
 
     /**
      * Sends a message to a specific client using their session.
