@@ -43,6 +43,7 @@ public class WebSocketHandler {
                 handleMove(command.getAuthToken(), command.getGameID(), move, session);
             }
             case RESIGN -> handleResign(command.getAuthToken(), command.getGameID(), session);
+            case LEAVE -> handleLeave(command.getAuthToken(), command.getGameID(), session);
             default -> System.out.println("Unhandled command type");
         }
     }
@@ -103,6 +104,55 @@ public class WebSocketHandler {
         }
     }
 
+    private void handleLeave(String authToken, Integer gameID, Session session) {
+        try {
+            // Validate auth token
+            AuthData authData = authDAO.getAuth(authToken);
+            if (authData == null) {
+                System.out.println("Invalid auth token: " + authToken);
+                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid auth token."));
+                return;
+            }
+
+            // Retrieve game data
+            GameData gameData = gameDAO.getGame(gameID);
+            if (gameData == null) {
+                System.out.println("Invalid game ID: " + gameID);
+                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid game ID."));
+                return;
+            }
+
+            // Ensure player is part of the game
+            String username = authData.username();
+            boolean isWhitePlayer = username.equals(gameData.getWhiteUsername());
+            boolean isBlackPlayer = username.equals(gameData.getBlackUsername());
+            if (!isWhitePlayer && !isBlackPlayer) {
+                System.out.println("Player not part of the game: " + username);
+                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Player not part of the game."));
+                return;
+            }
+
+            // Remove player from the game
+            if (isWhitePlayer) {
+                gameData.setWhiteUsername(null);
+            } else if (isBlackPlayer) {
+                gameData.setBlackUsername(null);
+            }
+
+            // Update the game in the database
+            gameDAO.updateGame(gameData);
+
+            // Notify other clients about the leave
+            String leaveNotification = username + " has left the game.";
+            Notification notification = new Notification(leaveNotification);
+            connections.broadcast(authToken, notification);
+
+        } catch (Exception e) {
+            System.err.println("Error processing leave: " + e.getMessage());
+            connections.sendToRoot(session, new ServerMessage.ErrorMessage("Server error: " + e.getMessage()));
+        }
+    }
+
 
     private void handleMove(String authToken, Integer gameID, ChessMove move, Session session) {
         try {
@@ -119,6 +169,13 @@ public class WebSocketHandler {
             if (gameData == null) {
                 System.out.println("Invalid game ID: " + gameID);
                 connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid game ID."));
+                return;
+            }
+
+            // Ensure the game is not over
+            if (gameData.getGame().getBoard() == null) { // Null board indicates the game is over
+                System.out.println("Attempted move after game is over.");
+                connections.sendToRoot(session, new ServerMessage.ErrorMessage("The game is over. No further moves are allowed."));
                 return;
             }
 
@@ -184,13 +241,15 @@ public class WebSocketHandler {
         }
     }
 
+
     private void handleResign(String authToken, Integer gameID, Session session) {
         try {
-            // Validate auth token
+            // Validate the authToken
             AuthData authData = authDAO.getAuth(authToken);
             if (authData == null) {
                 System.out.println("Invalid auth token: " + authToken);
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid auth token."));
+                ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Invalid auth token.");
+                connections.sendToRoot(session, errorMessage);
                 return;
             }
 
@@ -198,33 +257,34 @@ public class WebSocketHandler {
             GameData gameData = gameDAO.getGame(gameID);
             if (gameData == null) {
                 System.out.println("Invalid game ID: " + gameID);
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid game ID."));
+                ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Invalid game ID.");
+                connections.sendToRoot(session, errorMessage);
                 return;
             }
 
             // Ensure player is part of the game
             String username = authData.username();
-            boolean isWhitePlayer = username.equals(gameData.getWhiteUsername());
-            boolean isBlackPlayer = username.equals(gameData.getBlackUsername());
-            if (!isWhitePlayer && !isBlackPlayer) {
+            if (!username.equals(gameData.getWhiteUsername()) && !username.equals(gameData.getBlackUsername())) {
                 System.out.println("Player not part of the game: " + username);
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Player not part of the game."));
+                ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Player not part of the game.");
+                connections.sendToRoot(session, errorMessage);
                 return;
             }
 
-            // Mark game as over in the database
-            gameData.getGame().setBoard(null); // Clear the board to signify game over
+            // Mark the game as over
+            ChessGame game = gameData.getGame();
+            game.setBoard(null); // Clear the board or add a specific game-over flag
             gameDAO.updateGame(gameData);
 
-            // Notify all players about the resignation
-            String resignMessage = username + " has resigned. " +
-                    (isWhitePlayer ? "Black wins!" : "White wins!");
-            Notification notification = new Notification(resignMessage);
-            connections.broadcast(authToken, notification);
+            // Notify all clients (including the resigning client)
+            String resignationMessage = username + " has resigned. The game is over.";
+            Notification notification = new Notification(resignationMessage);
+            connections.broadcast(null, notification);
 
         } catch (Exception e) {
-            System.err.println("Error processing resign: " + e.getMessage());
-            connections.sendToRoot(session, new ServerMessage.ErrorMessage("Server error: " + e.getMessage()));
+            System.err.println("Error processing resignation: " + e.getMessage());
+            ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Server error: " + e.getMessage());
+            connections.sendToRoot(session, errorMessage);
         }
     }
 
