@@ -5,6 +5,7 @@ import chess.ChessPiece;
 import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import chess.ChessGame;
+import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import model.AuthData;
 import model.GameData;
@@ -31,7 +32,7 @@ public class WebSocketHandler {
     }
 
     @OnWebSocketMessage
-    public void onMessage(Session session, String message) {
+    public void onMessage(Session session, String message) throws DataAccessException {
         var command = gson.fromJson(message, websocket.commands.UserGameCommand.class);
         switch (command.getCommandType()) {
             case CONNECT -> connectPlayer(command.getAuthToken(), command.getGameID(), session);
@@ -109,25 +110,8 @@ public class WebSocketHandler {
     }
 
 
-    private void handleLeave(String authToken, Integer gameID, Session session) {
-        try {
-            // Validate auth token
-            AuthData authData = authDAO.getAuth(authToken);
-            if (authData == null) {
-                System.out.println("Invalid auth token: " + authToken);
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid auth token."));
-                return;
-            }
-
-            // Retrieve game data
-            GameData gameData = gameDAO.getGame(gameID);
-            if (gameData == null) {
-                System.out.println("Invalid game ID: " + gameID);
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid game ID."));
-                return;
-            }
-
-            // Check if the client is a player
+    private void handleLeave(String authToken, Integer gameID, Session session) throws DataAccessException {
+        if (!validateAuthAndGame(authToken, gameID, session, (authData, gameData) -> {
             String username = authData.username();
             boolean isWhitePlayer = username.equals(gameData.getWhiteUsername());
             boolean isBlackPlayer = username.equals(gameData.getBlackUsername());
@@ -146,8 +130,6 @@ public class WebSocketHandler {
                 // Notify other clients
                 String leaveNotification = username + " has left the game.";
                 Notification notification = new Notification(leaveNotification);
-
-                // Broadcast notification to all players in the game (except the leaving player)
                 connections.broadcastToGame(gameID, authToken, notification);
 
             } else {
@@ -160,35 +142,16 @@ public class WebSocketHandler {
 
             // Remove the connection
             connections.remove(authToken, gameID);
-
-        } catch (Exception e) {
-            System.err.println("Error processing leave: " + e.getMessage());
-            connections.sendToRoot(session, new ServerMessage.ErrorMessage("Server error: " + e.getMessage()));
+        })) {
+            return; // Validation failed, exit
         }
     }
 
 
-    private void handleMove(String authToken, Integer gameID, ChessMove move, Session session) {
-        try {
-            // Validate auth token
-            AuthData authData = authDAO.getAuth(authToken);
-            if (authData == null) {
-                System.out.println("Invalid auth token: " + authToken);
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid auth token."));
-                return;
-            }
-
-            // Retrieve game data
-            GameData gameData = gameDAO.getGame(gameID);
-            if (gameData == null) {
-                System.out.println("Invalid game ID: " + gameID);
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid game ID."));
-                return;
-            }
-
+    private void handleMove(String authToken, Integer gameID, ChessMove move, Session session) throws DataAccessException {
+        if (!validateAuthAndGame(authToken, gameID, session, (authData, gameData) -> {
             // Ensure the game is not over
-            if (gameData.getGame().isGameOver()) { // Use isGameOver to check if the game has ended
-                System.out.println("Attempted move after game is over.");
+            if (gameData.getGame().isGameOver()) {
                 connections.sendToRoot(session, new ServerMessage.ErrorMessage("The game is over. No further moves are allowed."));
                 return;
             }
@@ -198,7 +161,6 @@ public class WebSocketHandler {
             boolean isWhitePlayer = username.equals(gameData.getWhiteUsername());
             boolean isBlackPlayer = username.equals(gameData.getBlackUsername());
             if (!isWhitePlayer && !isBlackPlayer) {
-                System.out.println("Player not part of the game: " + username);
                 connections.sendToRoot(session, new ServerMessage.ErrorMessage("Player not part of the game."));
                 return;
             }
@@ -208,7 +170,6 @@ public class WebSocketHandler {
             ChessPiece piece = game.getBoard().getPiece(move.getStartPosition());
             if (piece == null || (isWhitePlayer && piece.getTeamColor() != ChessGame.TeamColor.WHITE) ||
                     (isBlackPlayer && piece.getTeamColor() != ChessGame.TeamColor.BLACK)) {
-                System.out.println("Player attempted to move an opponent's piece: " + username);
                 connections.sendToRoot(session, new ServerMessage.ErrorMessage("You can only move your own pieces."));
                 return;
             }
@@ -217,7 +178,6 @@ public class WebSocketHandler {
             try {
                 game.makeMove(move); // Apply the move
             } catch (InvalidMoveException e) {
-                System.out.println("Invalid move: " + e.getMessage());
                 connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid move: " + e.getMessage()));
                 return;
             }
@@ -236,23 +196,32 @@ public class WebSocketHandler {
             }
             Notification notification = new Notification(moveNotification);
             connections.broadcastToGame(gameID, authToken, notification);
-
-            // Check for endgame scenarios
-            if (game.isInCheckmate(game.getTeamTurn())) {
-                Notification checkmateNotification = new Notification("Checkmate! " + game.getTeamTurn() + " loses.");
-                connections.broadcastToGame(gameID, null, checkmateNotification);
-            } else if (game.isInStalemate(game.getTeamTurn())) {
-                Notification stalemateNotification = new Notification("Stalemate! The game is a draw.");
-                connections.broadcastToGame(gameID, null, stalemateNotification);
-            } else if (game.isInCheck(game.getTeamTurn())) {
-                Notification checkNotification = new Notification(game.getTeamTurn() + " is in check.");
-                connections.broadcastToGame(gameID, null, checkNotification);
-            }
-
-        } catch (Exception e) {
-            System.err.println("Error processing move: " + e.getMessage());
-            connections.sendToRoot(session, new ServerMessage.ErrorMessage("Server error: " + e.getMessage()));
+        })) {
+            return; // Validation failed, exit
         }
+    }
+
+
+    private boolean validateAuthAndGame(String authToken, Integer gameID, Session session, SessionConsumer consumer) throws DataAccessException {
+        AuthData authData = authDAO.getAuth(authToken);
+        if (authData == null) {
+            connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid auth token."));
+            return false;
+        }
+
+        GameData gameData = gameDAO.getGame(gameID);
+        if (gameData == null) {
+            connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid game ID."));
+            return false;
+        }
+
+        consumer.accept(authData, gameData);
+        return true;
+    }
+
+    @FunctionalInterface
+    public interface SessionConsumer {
+        void accept(AuthData authData, GameData gameData) throws DataAccessException;
     }
 
 

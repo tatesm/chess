@@ -152,31 +152,6 @@ public class ConnectionManager {
         return false;
     }
 
-    /**
-     * Checks if a connection exists for the given auth token.
-     *
-     * @param authToken the auth token
-     * @return true if a connection exists, false otherwise
-     */
-    public boolean containsToken(String authToken) {
-        return connections.containsKey(authToken);
-    }
-
-    /**
-     * Checks if the client is an observer in the game.
-     *
-     * @param authToken     the auth token of the client
-     * @param whiteUsername the username of the white player
-     * @param blackUsername the username of the black player
-     * @return true if the client is an observer, false otherwise
-     */
-    public boolean isObserver(String authToken, String whiteUsername, String blackUsername) {
-        if (!containsToken(authToken)) {
-            return false; // Not part of the game
-        }
-        // If not one of the players, consider them an observer
-        return !authToken.equals(whiteUsername) && !authToken.equals(blackUsername);
-    }
 
     /**
      * Retrieves the connection associated with an auth token.
