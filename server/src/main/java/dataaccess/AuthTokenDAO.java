@@ -11,7 +11,7 @@ public class AuthTokenDAO {
 
     private static final AuthTokenDAO INSTANCE = new AuthTokenDAO();
 
-    private AuthTokenDAO() {
+    public AuthTokenDAO() {
     }
 
     public static AuthTokenDAO getInstance() {

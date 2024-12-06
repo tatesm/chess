@@ -3,7 +3,9 @@ package server.websocket;
 import com.google.gson.Gson;
 import chess.ChessGame;
 import dataaccess.GameDAO;
+import model.AuthData;
 import model.GameData;
+import dataaccess.AuthTokenDAO;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
@@ -18,14 +20,13 @@ import java.io.IOException;
 public class WebSocketHandler {
 
     private final ConnectionManager connections = new ConnectionManager();
-    private final GameDAO gameDAO = new GameDAO(); // Ensure this is properly initialized
+    private final GameDAO gameDAO = new GameDAO();
+    private final AuthTokenDAO authDAO = new AuthTokenDAO();// Ensure this is properly initialized
     private final Gson gson = new Gson();
 
     @OnWebSocketConnect
     public void onConnect(Session session) {
-        String authToken = "some_token"; // Replace with actual extraction logic
-        connections.add(authToken, session);
-        System.out.println("New connection established: " + authToken);
+        System.out.println("New connection established");
     }
 
     @OnWebSocketMessage
@@ -48,40 +49,45 @@ public class WebSocketHandler {
 
     private void connectPlayer(String authToken, Integer gameID, Session session) {
         try {
-            // Add root client to connections
-            connections.add(authToken, session);
 
             // Retrieve the game data for the given game ID
             GameData gameData = gameDAO.getGame(gameID);
+            AuthData authData = authDAO.getAuth(authToken);
 
-            // If game data doesn't exist, send an error message to the root client
+            // Handle invalid game ID
             if (gameData == null) {
-                ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Invalid game ID: " + gameID);
+                System.out.println("Invalid game ID: " + gameID);
+                ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Invalid game ID.");
+                connections.sendToRoot(authToken, errorMessage);
+                return; // Stop further processing
+            }
+
+            // Validate authToken
+            if (!authToken.equals(authData.authToken()) && !authToken.equals(gameData.getBlackUsername())) {
+                System.out.println("Invalid auth token: " + authToken);
+                ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Invalid auth token.");
                 connections.sendToRoot(authToken, errorMessage);
                 return;
             }
+            connections.add(authToken, session);
 
             // Determine the player's color
-            String playerColor;
-            if (authToken.equals(gameData.getWhiteUsername())) {
-                playerColor = "white";
-            } else if (authToken.equals(gameData.getBlackUsername())) {
-                playerColor = "black";
-            } else {
-                playerColor = "observer"; // Default to observer if not a player
-            }
+            String playerColor = authData.username().equals(gameData.getWhiteUsername()) ? "white" :
+                    authData.username().equals(gameData.getBlackUsername()) ? "black" : "observer";
 
             // Send a LOAD_GAME message to the root client
             ServerMessage.LoadGameMessage loadGameMessage = new ServerMessage.LoadGameMessage(gameData);
+            System.out.println("Sending LOAD_GAME to root client: " + authToken);
             connections.sendToRoot(authToken, loadGameMessage);
 
-            // Create and send a Notification message to all other clients
+            // Notify other clients (broadcast)
             String notificationMessage = gameData.getGameName() + " | " + authToken + " joined as " + playerColor;
             Notification notification = new Notification(notificationMessage);
-            connections.broadcast(authToken, notification); // Excludes the root client from broadcast
+            System.out.println("Broadcasting NOTIFICATION to other players.");
+            connections.broadcast(authToken, notification);
 
         } catch (Exception e) {
-            // Send a detailed error message to the root client in case of any exception
+            System.err.println("Error connecting player: " + e.getMessage());
             ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Server error: " + e.getMessage());
             connections.sendToRoot(authToken, errorMessage);
         }
