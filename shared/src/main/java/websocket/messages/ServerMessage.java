@@ -111,4 +111,5 @@ public class ServerMessage {
     public int hashCode() {
         return Objects.hash(getServerMessageType());
     }
+
 }

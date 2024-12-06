@@ -48,26 +48,22 @@ public class ConnectionManager {
         }
     }
 
-    public boolean sendToRoot(String rootPlayer, ServerMessage message) { // takes in a session, sends to the session
-        Connection rootConnection = connections.get(rootPlayer);
-        if (rootConnection != null && rootConnection.isOpen()) {
+    public boolean sendToRoot(Session session, ServerMessage message) {
+        if (session != null && session.isOpen()) {
             try {
                 String json = gson.toJson(message); // Serialize ServerMessage to JSON
-                System.out.println("Sending to root player: " + rootPlayer);
+                System.out.println("Sending message to session: " + session);
                 System.out.println("Message content: " + json);
-                rootConnection.send(json);
+                session.getRemote().sendString(json); // Send the message to the session
                 return true;
             } catch (IOException e) {
-                System.err.println("Failed to send message to root client: " + rootPlayer + ". Message: " + gson.toJson(message));
+                System.err.println("Failed to send message to session. Message: " + gson.toJson(message));
                 e.printStackTrace();
             }
         } else {
-            System.err.println("No open connection found for root player: " + rootPlayer);
+            System.err.println("Session is null or closed: " + session);
         }
         return false; // Indicate failure
     }
 
-    public Connection getConnection(String playerName) {
-        return connections.get(playerName);
-    }
 }

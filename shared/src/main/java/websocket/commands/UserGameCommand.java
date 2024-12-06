@@ -1,19 +1,12 @@
 package websocket.commands;
 
-import java.util.Objects;
+import chess.ChessMove;
+import com.google.gson.Gson;
 
-/**
- * Represents a command a user can send the server over a websocket
- *
- * Note: You can add to this class, but you should not alter the existing
- * methods.
- */
 public class UserGameCommand {
 
     private final CommandType commandType;
-
     private final String authToken;
-
     private final Integer gameID;
 
     public UserGameCommand(CommandType commandType, String authToken, Integer gameID) {
@@ -41,22 +34,26 @@ public class UserGameCommand {
         return gameID;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+    /**
+     * Retrieve the ChessMove if this is a MAKE_MOVE command.
+     *
+     * @param gson The Gson instance used to deserialize the command.
+     * @return The ChessMove for the command, or null if not a MAKE_MOVE command.
+     */
+    public ChessMove getMove(Gson gson, String message) {
+        if (commandType == CommandType.MAKE_MOVE) {
+            // Deserialize the move from the JSON message
+            return gson.fromJson(message, MakeMoveCommand.class).getMove();
         }
-        if (!(o instanceof UserGameCommand)) {
-            return false;
-        }
-        UserGameCommand that = (UserGameCommand) o;
-        return getCommandType() == that.getCommandType() &&
-                Objects.equals(getAuthToken(), that.getAuthToken()) &&
-                Objects.equals(getGameID(), that.getGameID());
+        return null;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(getCommandType(), getAuthToken(), getGameID());
+    // Inner class to handle the deserialization of the move
+    private static class MakeMoveCommand {
+        private ChessMove move;
+
+        public ChessMove getMove() {
+            return move;
+        }
     }
 }
