@@ -187,11 +187,11 @@ public class WebSocketHandler {
             }
 
             // Ensure the game is not over
-            if (gameData.getGame().getBoard() == null) { // Null board indicates the game is over
+            if (gameData.getGame().isGameOver()) { // Use isGameOver to check if the game has ended
                 System.out.println("Attempted move after game is over.");
                 connections.sendToRoot(session, new ServerMessage.ErrorMessage("The game is over. No further moves are allowed."));
                 return;
-            }//add column or vairable to gameData or chessboard, boolean if game is resigned, end game for everyone
+            }
 
             // Ensure player is part of the game
             String username = authData.username();
@@ -275,8 +275,7 @@ public class WebSocketHandler {
             }
 
             // Ensure the game is not already over
-            // do new varible, is game over, if true, end game
-            if (gameData.getGame().getBoard() == null) { // Null board indicates the game is over
+            if (gameData.getGame().isGameOver()) {
                 System.out.println("Attempted to resign after the game is already over.");
                 connections.sendToRoot(session, new ServerMessage.ErrorMessage("The game is already over. You cannot resign."));
                 return;
@@ -300,7 +299,7 @@ public class WebSocketHandler {
             // Mark the game as over
             ChessGame game = gameData.getGame();
             gameData.setResigned(true); // Mark the game as resigned
-            game.setBoard(null); // Clear the board to indicate game over
+            game.setGameOver(true);    // Mark the game as over
             gameDAO.updateGame(gameData);
 
             // Notify all players and observers, including the resigning player
