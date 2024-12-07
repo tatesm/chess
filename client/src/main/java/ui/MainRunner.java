@@ -50,7 +50,7 @@ public class MainRunner {
 
         if ("logout".equals(result)) {
             currentState = AppState.PRELOGIN;
-        } else if ("game".equals(result)) {
+        } else if ("play game".equals(result)) {
             gameId = postLoginClient.getJoinedGameId();
             currentState = AppState.GAME;
         }

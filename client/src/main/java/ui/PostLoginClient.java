@@ -85,6 +85,7 @@ public class PostLoginClient {
     }
 
     public int getJoinedGameId() {
+
         return joinedGameId; // Retrieve the ID of the currently joined game
     }
 
@@ -120,6 +121,7 @@ public class PostLoginClient {
             // Attempt to join the game
             serverFacade.joinGame(authToken, gameId, playerColor);
             System.out.printf("Successfully joined game '%s' as %s.%n", selectedGame.getGameName(), playerColor);
+            joinedGameId = gameId;
 
             // Display the board after joining
             String board = serverFacade.getBoard(gameId, authToken, playerColor); // Fetch the board
