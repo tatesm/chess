@@ -10,13 +10,15 @@ import java.util.Scanner;
 public class MainRunner {
     private final ServerFacade serverFacade;
     private final Scanner scanner;
+    private final WebSocketFacade webSocketFacade;
     private AppState currentState;
     private String authToken;
     private int gameId;
 
-    public MainRunner(ServerFacade serverFacade, Scanner scanner) {
+    public MainRunner(ServerFacade serverFacade, Scanner scanner, WebSocketFacade webSocketFacade) {
         this.serverFacade = serverFacade;
         this.scanner = scanner;
+        this.webSocketFacade = webSocketFacade;
         this.currentState = AppState.PRELOGIN;
         this.authToken = null;
         this.gameId = -1;
@@ -45,7 +47,7 @@ public class MainRunner {
     }
 
     private void handlePostLogin() {
-        PostLoginClient postLoginClient = new PostLoginClient(serverFacade, scanner, authToken);
+        PostLoginClient postLoginClient = new PostLoginClient(serverFacade, scanner, authToken, webSocketFacade);
         String result = postLoginClient.run();
 
         if ("logout".equals(result)) {
@@ -63,7 +65,7 @@ public class MainRunner {
             return;
         }
 
-        GameClient gameClient = new GameClient(serverFacade, scanner, gameId, authToken);
+        GameClient gameClient = new GameClient(serverFacade, scanner, webSocketFacade, gameId, authToken);
         String result = gameClient.run();
 
         switch (result) {

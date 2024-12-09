@@ -2,6 +2,7 @@ import chess.*;
 import client.ServerFacade;
 
 import ui.MainRunner;
+import ui.WebSocketFacade;
 
 
 import java.util.Scanner;
@@ -15,7 +16,8 @@ public class Main {
         var scanner = new Scanner(System.in);
         var serverFacade = new ServerFacade(serverUrl);
 
-        MainRunner appRunner = new MainRunner(serverFacade, scanner);
+        WebSocketFacade webSocketFacade = new WebSocketFacade();
+        MainRunner appRunner = new MainRunner(serverFacade, scanner, webSocketFacade);
         appRunner.run(); // Delegate the loop to the ApplicationRunner class
 
         System.out.println("Goodbye!");

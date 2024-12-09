@@ -11,6 +11,7 @@ import java.util.Scanner;
 public class GameClient {
     private final ServerFacade serverFacade;
     private final Scanner scanner;
+    private final WebSocketFacade webSocketFacade;
     private int gameId;
     private final String authToken;
 
@@ -22,9 +23,10 @@ public class GameClient {
      * @param gameId       Unique identifier of the game.
      * @param authToken    Authentication token for secure server access.
      */
-    public GameClient(ServerFacade serverFacade, Scanner scanner, int gameId, String authToken) {
+    public GameClient(ServerFacade serverFacade, Scanner scanner, WebSocketFacade webSocketFacade, int gameId, String authToken) {
         this.serverFacade = serverFacade;
         this.scanner = scanner;
+        this.webSocketFacade = webSocketFacade;
         this.gameId = gameId;
         this.authToken = authToken;
     }
@@ -94,7 +96,7 @@ public class GameClient {
         }
 
         try {
-            serverFacade.makeMove(gameId, move, authToken);
+            webSocketFacade.makeMove(gameId, move, authToken);
             System.out.println("Move accepted.");
             displayCurrentBoard(); // Display the board after a successful move
         } catch (Exception e) {
@@ -146,7 +148,7 @@ public class GameClient {
      */
     private void exitGame() {
         try {
-            if (serverFacade.quitGame(gameId, authToken)) {
+            if (webSocketFacade.quitGame(gameId, authToken)) {
                 System.out.println("Successfully exited the game.");
                 gameId = -1; // Reset the game ID to indicate no active game
             } else {

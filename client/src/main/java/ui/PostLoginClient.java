@@ -12,11 +12,13 @@ public class PostLoginClient {
     private final Scanner scanner;
     private final String authToken; // The unique authentication token for the logged-in user
     private int joinedGameId = -1; // Tracks the game the user has joined, if any
+    private final WebSocketFacade webSocketFacade;
 
-    public PostLoginClient(ServerFacade serverFacade, Scanner scanner, String authToken) {
+    public PostLoginClient(ServerFacade serverFacade, Scanner scanner, String authToken, WebSocketFacade webSocketFacade) {
         this.serverFacade = serverFacade; // Dependency injection for server communication
         this.scanner = scanner; // User input handler
         this.authToken = authToken; // Authentication token for API requests
+        this.webSocketFacade = webSocketFacade;
     }
 
     public String getAuthToken() {
@@ -188,7 +190,7 @@ public class PostLoginClient {
                 perspective = "white"; // Default perspective
             }
 
-            serverFacade.observeGame(authToken, gameId, perspective); // Pass the perspective
+            webSocketFacade.observeGame(authToken, gameId, perspective); // Pass the perspective
         } catch (NumberFormatException e) {
             System.out.println("Invalid game number. Please enter a valid number."); // Inform user about invalid input
         } catch (Exception e) {
