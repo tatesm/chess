@@ -23,7 +23,16 @@ public class GameClient {
         this.gameId = gameId;
         this.authToken = authToken;
         this.chessBoard = new ChessBoard();
+
+        try {
+            String initialBoard = webSocketFacade.getBoard(gameId, authToken, "white", chessBoard);
+            System.out.println("Initial board state:");
+            System.out.println(initialBoard);
+        } catch (Exception e) {
+            System.out.println("Failed to fetch initial board state: " + e.getMessage());
+        }
     }
+
 
     public String run() {
         while (true) {
@@ -42,6 +51,11 @@ public class GameClient {
     }
 
     private boolean processCommand(String command) throws Exception {
+        if (command.isBlank()) {
+            System.out.println("Invalid command. Type 'help' for a list of commands.");
+            return true;
+        }
+
         switch (command) {
             case "help" -> displayHelp();
             case "redraw board" -> redrawBoard();
@@ -57,44 +71,6 @@ public class GameClient {
         return true;
     }
 
-    private void highlightLegalMoves() throws Exception {
-        System.out.print("Enter the square of the piece (e.g., e2): ");
-        String square = scanner.nextLine().trim().toLowerCase();
-
-        // Send the request to the server via WebSocketFacade
-        String[] legalMoves = webSocketFacade.highlightLegalMoves(gameId, square, authToken);
-
-        if (legalMoves != null) {
-            // Highlight the board
-            String[][] boardDisplay = new String[8][8];
-            for (int row = 1; row <= 8; row++) {
-                for (int col = 1; col <= 8; col++) {
-                    ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
-                    boardDisplay[row - 1][col - 1] = piece != null ? webSocketFacade.pieceToDisplay(piece) : EscapeSequences.EMPTY;
-                }
-            }
-
-            // Highlight the selected square
-            int selectedRow = 8 - (square.charAt(1) - '1');
-            int selectedCol = square.charAt(0) - 'a';
-            boardDisplay[selectedRow][selectedCol] = EscapeSequences.SET_BG_COLOR_BLUE
-                    + boardDisplay[selectedRow][selectedCol] + EscapeSequences.RESET_BG_COLOR;
-
-            // Highlight legal moves
-            for (String move : legalMoves) {
-                int moveRow = 8 - (move.charAt(1) - '1');
-                int moveCol = move.charAt(0) - 'a';
-                boardDisplay[moveRow][moveCol] = EscapeSequences.SET_BG_COLOR_GREEN
-                        + boardDisplay[moveRow][moveCol] + EscapeSequences.RESET_BG_COLOR;
-            }
-
-            // Print the updated board
-            System.out.println(Helper.formatBoard(boardDisplay));
-        } else {
-            System.out.println("No legal moves available or an error occurred.");
-        }
-    }
-
 
     private void displayHelp() {
         System.out.println("Available commands:");
@@ -106,11 +82,33 @@ public class GameClient {
         System.out.println("- highlight moves: Highlight all legal moves for a selected piece.");
     }
 
-    private void redrawBoard() throws Exception { //
-        String board = webSocketFacade.getBoard(gameId, authToken, "white", chessBoard); // Default to "white"
-        System.out.println("Current board:");
+    private void redrawBoard() throws Exception {
+        System.out.print("Choose perspective (white/black): ");
+        String perspective = scanner.nextLine().trim().toLowerCase();
+
+        if (!perspective.equals("white") && !perspective.equals("black")) {
+            System.out.println("Invalid perspective. Defaulting to white.");
+            perspective = "white";
+        }
+
+        String board = webSocketFacade.getBoard(gameId, authToken, perspective, chessBoard);
+        System.out.println("Current board (" + perspective + " perspective):");
         System.out.println(board);
     }
+
+    private void highlightLegalMoves() throws Exception {
+        System.out.print("Enter the square of the piece (e.g., e2): ");
+        String square = scanner.nextLine().trim().toLowerCase();
+
+        String[] legalMoves = webSocketFacade.highlightLegalMoves(gameId, square, authToken);
+        if (legalMoves != null) {
+            System.out.println("Highlighted Board:");
+            System.out.println(Helper.formatBoardWithHighlight(chessBoard, square, legalMoves));
+        } else {
+            System.out.println("No legal moves available or an error occurred.");
+        }
+    }
+
 
     private void leaveGame() throws Exception {
         if (webSocketFacade.leaveGame(gameId, authToken)) {
