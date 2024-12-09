@@ -3,6 +3,7 @@ package ui;
 import client.ServerFacade;
 import model.AuthData;
 import model.GameData;
+import ui.WebSocketFacade;
 
 import java.util.Scanner;
 
@@ -17,12 +18,14 @@ public class Repl {
     private boolean inGame = false;
     private String authToken;  // Stores auth token after login
     private int currentGameId = -1;
+    private final WebSocketFacade webSocketFacade;
 
     /**
      * Initializes the REPL with the given server URL.
      */
-    public Repl(String serverUrl) {
+    public Repl(String serverUrl, WebSocketFacade webSocketFacade) {
         this.serverFacade = new ServerFacade(serverUrl);
+        this.webSocketFacade = webSocketFacade;
     }
 
     /**
@@ -239,7 +242,7 @@ public class Repl {
             }
 
             // Attempt to observe the game
-            serverFacade.observeGame(authToken, gameId, perspective);
+            webSocketFacade.observeGame(authToken, gameId, perspective);
             inGame = true;
             System.out.println("Observing game #" + gameId + " as " + perspective + ".");
         } catch (NumberFormatException e) {
@@ -255,7 +258,7 @@ public class Repl {
         String move = scanner.nextLine();
 
         try {
-            serverFacade.makeMove(currentGameId, move, authToken);
+            webSocketFacade.makeMove(currentGameId, move, authToken);
             System.out.println("Move successful.");
         } catch (Exception e) {
             System.out.println("Move error: " + e.getMessage());

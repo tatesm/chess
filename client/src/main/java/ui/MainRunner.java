@@ -1,5 +1,6 @@
 package ui;
 
+import chess.ChessBoard;
 import client.ServerFacade;
 import ui.GameClient;
 import ui.PostLoginClient;
@@ -9,13 +10,16 @@ import java.util.Scanner;
 
 public class MainRunner {
     private final ServerFacade serverFacade;
+    private final WebSocketFacade webSocketFacade;
     private final Scanner scanner;
     private AppState currentState;
     private String authToken;
     private int gameId;
+    private ChessBoard chessBoard;
 
-    public MainRunner(ServerFacade serverFacade, Scanner scanner) {
+    public MainRunner(ServerFacade serverFacade, WebSocketFacade webSocketFacade, Scanner scanner) {
         this.serverFacade = serverFacade;
+        this.webSocketFacade = webSocketFacade;
         this.scanner = scanner;
         this.currentState = AppState.PRELOGIN;
         this.authToken = null;
@@ -45,7 +49,7 @@ public class MainRunner {
     }
 
     private void handlePostLogin() {
-        PostLoginClient postLoginClient = new PostLoginClient(serverFacade, scanner, authToken);
+        PostLoginClient postLoginClient = new PostLoginClient(serverFacade, webSocketFacade, scanner, authToken);
         String result = postLoginClient.run();
 
         if ("logout".equals(result)) {
@@ -63,7 +67,7 @@ public class MainRunner {
             return;
         }
 
-        GameClient gameClient = new GameClient(serverFacade, scanner, gameId, authToken);
+        GameClient gameClient = new GameClient(scanner, webSocketFacade, gameId, authToken);
         String result = gameClient.run();
 
         switch (result) {

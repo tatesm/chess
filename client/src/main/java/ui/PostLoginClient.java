@@ -1,22 +1,25 @@
 package ui;
 
+import chess.ChessBoard;
 import client.ServerFacade;
 import model.GameData;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class PostLoginClient {
     private final ServerFacade serverFacade;
+    private final WebSocketFacade webSocketFacade;
     private final Scanner scanner;
     private final String authToken; // The unique authentication token for the logged-in user
     private int joinedGameId = -1; // Tracks the game the user has joined, if any
 
-    public PostLoginClient(ServerFacade serverFacade, Scanner scanner, String authToken) {
+    public PostLoginClient(ServerFacade serverFacade, WebSocketFacade webSocketFacade, Scanner scanner, String authToken) {
         this.serverFacade = serverFacade; // Dependency injection for server communication
+        this.webSocketFacade = webSocketFacade;
         this.scanner = scanner; // User input handler
         this.authToken = authToken; // Authentication token for API requests
+
     }
 
     public String getAuthToken() {
@@ -123,11 +126,6 @@ public class PostLoginClient {
             System.out.printf("Successfully joined game '%s' as %s.%n", selectedGame.getGameName(), playerColor);
             joinedGameId = gameId;
 
-            // Display the board after joining
-            String board = serverFacade.getBoard(gameId, authToken, playerColor); // Fetch the board
-            System.out.println("Current Board:");
-            System.out.println(board);
-
             return true;
         } catch (NumberFormatException e) {
             System.out.println("Invalid input. Please enter a valid number.");
@@ -188,7 +186,7 @@ public class PostLoginClient {
                 perspective = "white"; // Default perspective
             }
 
-            serverFacade.observeGame(authToken, gameId, perspective); // Pass the perspective
+            webSocketFacade.observeGame(authToken, gameId, perspective); // Pass the perspective
         } catch (NumberFormatException e) {
             System.out.println("Invalid game number. Please enter a valid number."); // Inform user about invalid input
         } catch (Exception e) {

@@ -3,7 +3,7 @@ package client;
 import ui.EscapeSequences;
 
 public class Helper {
-    static String formatBoard(String[][] board) {
+    public static String formatBoard(String[][] board) {
         StringBuilder boardRepresentation = new StringBuilder();
         //If black flip the headers
 

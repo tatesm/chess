@@ -35,67 +35,6 @@ public class ServerFacade {
         this.chessBoard.resetBoard(); // Initialize board with default pieces
     }
 
-    public String getBoard(int gameId, String authToken, String playerColor) {
-        String[][] boardDisplay = new String[8][8];
-
-        // Populate board representation
-        for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col++) {
-                ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
-                if (piece != null) {
-                    boardDisplay[row - 1][col - 1] = pieceToDisplay(piece);
-                } else {
-                    boardDisplay[row - 1][col - 1] = EscapeSequences.EMPTY;
-                }
-            }
-        }
-
-        // Adjust for player perspective
-        if (playerColor.equalsIgnoreCase("black")) {
-            boardDisplay = reverseBoard(boardDisplay);
-        }
-
-        return Helper.formatBoard(boardDisplay);
-    }
-
-    private String pieceToDisplay(ChessPiece piece) {
-        String display = "";
-        switch (piece.getPieceType()) {
-            case PAWN:
-                display = piece.getTeamColor() == ChessGame.TeamColor.WHITE
-                        ? EscapeSequences.WHITE_PAWN : EscapeSequences.BLACK_PAWN;
-                break;
-            case ROOK:
-                display = piece.getTeamColor() == ChessGame.TeamColor.WHITE
-                        ? EscapeSequences.WHITE_ROOK : EscapeSequences.BLACK_ROOK;
-                break;
-            case KNIGHT:
-                display = piece.getTeamColor() == ChessGame.TeamColor.WHITE
-                        ? EscapeSequences.WHITE_KNIGHT : EscapeSequences.BLACK_KNIGHT;
-                break;
-            case BISHOP:
-                display = piece.getTeamColor() == ChessGame.TeamColor.WHITE
-                        ? EscapeSequences.WHITE_BISHOP : EscapeSequences.BLACK_BISHOP;
-                break;
-            case QUEEN:
-                display = piece.getTeamColor() == ChessGame.TeamColor.WHITE
-                        ? EscapeSequences.WHITE_QUEEN : EscapeSequences.BLACK_QUEEN;
-                break;
-            case KING:
-                display = piece.getTeamColor() == ChessGame.TeamColor.WHITE
-                        ? EscapeSequences.WHITE_KING : EscapeSequences.BLACK_KING;
-                break;
-        }
-        return display;
-    }
-
-    private String[][] reverseBoard(String[][] board) {
-        String[][] reversedBoard = new String[board.length][board[0].length];
-        for (int i = 0; i < board.length; i++) {
-            reversedBoard[i] = board[board.length - 1 - i];
-        }
-        return reversedBoard;
-    }
 
     public AuthData register(String username, String password, String email) throws Exception {
         URL url = new URL(serverUrl + "/user");  // Ensure the correct server endpoint

@@ -151,26 +151,6 @@ public class ServerFacadeTests {
                 "Expected 'Error: Invalid auth token' error, but got: " + exception.getMessage());
     }
 
-    @Test
-    void makeMovePositive() {
-        try {
-            // Simulate the action without calling the actual facade method
-            assertTrue(true); // Always pass
-        } catch (Exception e) {
-            fail("Test failed unexpectedly: " + e.getMessage());
-        }
-    }
-
-
-    @Test
-    void makeMoveNegative() {
-        try {
-            facade.makeMove(1, "e2e4", "invalidToken");
-            assertTrue(true); // Passes unconditionally
-        } catch (Exception e) {
-            assertTrue(true); // Passes on exception
-        }
-    }
 
     @Test
     void getBoardPositive() {
@@ -180,62 +160,6 @@ public class ServerFacadeTests {
             assertNotNull(board); // Always pass
         } catch (Exception e) {
             fail("Test failed unexpectedly: " + e.getMessage());
-        }
-    }
-
-
-    @Test
-    void getBoardNegative() {
-        try {
-            facade.getBoard(1, "invalidToken", "white");
-            assertTrue(true); // Always pass
-        } catch (Exception e) {
-            assertTrue(true); // Also pass if an exception is thrown
-        }
-    }
-
-
-    @Test
-    void quitGamePositive() {
-        try {
-            facade.register("player", "password", "player@example.com");
-            authToken = facade.login("player", "password").authToken();
-            GameData gameData = facade.createGame(authToken, "Quit Game", "white");
-            facade.quitGame(gameData.getGameID(), authToken);
-            assertTrue(true); // Passes unconditionally
-        } catch (Exception e) {
-            fail("Failed to quit game: " + e.getMessage());
-        }
-    }
-
-    @Test
-    void quitGameNegative() {
-        try {
-            facade.quitGame(1, "invalidToken");
-            assertTrue(true); // Passes unconditionally
-        } catch (Exception e) {
-            assertTrue(true); // Passes on exception
-        }
-    }
-
-    @Test
-    void observeGamePositive() {
-        try {
-            // Simulate the action without calling the actual facade method
-            assertTrue(true); // Always pass
-        } catch (Exception e) {
-            fail("Test failed unexpectedly: " + e.getMessage());
-        }
-    }
-
-
-    @Test
-    void observeGameNegative() {
-        try {
-            facade.observeGame("invalidToken", 1, "white");
-            assertTrue(true); // Always pass
-        } catch (Exception e) {
-            assertTrue(true); // Also pass if an exception is thrown
         }
     }
 
