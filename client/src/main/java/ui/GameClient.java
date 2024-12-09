@@ -77,13 +77,15 @@ public class GameClient {
             // Highlight the selected square
             int selectedRow = 8 - (square.charAt(1) - '1');
             int selectedCol = square.charAt(0) - 'a';
-            boardDisplay[selectedRow][selectedCol] = EscapeSequences.SET_BG_COLOR_BLUE + boardDisplay[selectedRow][selectedCol] + EscapeSequences.RESET_BG_COLOR;
+            boardDisplay[selectedRow][selectedCol] = EscapeSequences.SET_BG_COLOR_BLUE
+                    + boardDisplay[selectedRow][selectedCol] + EscapeSequences.RESET_BG_COLOR;
 
             // Highlight legal moves
             for (String move : legalMoves) {
                 int moveRow = 8 - (move.charAt(1) - '1');
                 int moveCol = move.charAt(0) - 'a';
-                boardDisplay[moveRow][moveCol] = EscapeSequences.SET_BG_COLOR_GREEN + boardDisplay[moveRow][moveCol] + EscapeSequences.RESET_BG_COLOR;
+                boardDisplay[moveRow][moveCol] = EscapeSequences.SET_BG_COLOR_GREEN
+                        + boardDisplay[moveRow][moveCol] + EscapeSequences.RESET_BG_COLOR;
             }
 
             // Print the updated board

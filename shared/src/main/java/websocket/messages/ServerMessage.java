@@ -127,9 +127,15 @@ public class ServerMessage {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof LegalMovesMessage)) return false;
-            if (!super.equals(o)) return false;
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof LegalMovesMessage)) {
+                return false;
+            }
+            if (!super.equals(o)) {
+                return false;
+            }
             LegalMovesMessage that = (LegalMovesMessage) o;
             return Objects.equals(getLegalMoves(), that.getLegalMoves());
         }
@@ -154,9 +160,15 @@ public class ServerMessage {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof ResignationMessage)) return false;
-            if (!super.equals(o)) return false;
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof ResignationMessage)) {
+                return false;
+            }
+            if (!super.equals(o)) {
+                return false;
+            }
             ResignationMessage that = (ResignationMessage) o;
             return Objects.equals(getPlayer(), that.getPlayer());
         }
@@ -166,6 +178,5 @@ public class ServerMessage {
             return Objects.hash(super.hashCode(), getPlayer());
         }
     }
-
-
 }
+
