@@ -148,7 +148,7 @@ public class GameClient {
      */
     private void exitGame() {
         try {
-            if (webSocketFacade.quitGame(gameId, authToken)) {
+            if (webSocketFacade.leaveGameObserver(gameId, authToken)) {
                 System.out.println("Successfully exited the game.");
                 gameId = -1; // Reset the game ID to indicate no active game
             } else {

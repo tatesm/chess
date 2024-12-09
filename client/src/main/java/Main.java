@@ -16,7 +16,7 @@ public class Main {
         var scanner = new Scanner(System.in);
         var serverFacade = new ServerFacade(serverUrl);
 
-        WebSocketFacade webSocketFacade = new WebSocketFacade();
+        WebSocketFacade webSocketFacade = new WebSocketFacade(serverUrl, serverFacade);
         MainRunner appRunner = new MainRunner(serverFacade, scanner, webSocketFacade);
         appRunner.run(); // Delegate the loop to the ApplicationRunner class
 

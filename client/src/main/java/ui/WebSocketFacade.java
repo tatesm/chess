@@ -1,11 +1,24 @@
 package ui;
 
-import java.io.InputStreamReader;
+import client.ServerFacade;
+import com.google.gson.Gson;
+
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class WebSocketFacade {
+    private final String serverUrl;
+    private final Gson gson;
+    private final ServerFacade serverFacade;
+
+    public WebSocketFacade(String serverUrl, ServerFacade serverFacade) {
+        this.serverUrl = serverUrl;
+        this.serverFacade = serverFacade;
+        this.gson = new Gson();
+
+    }
+
     public void makeMove(int gameId, String move, String authToken) throws Exception {
         URL url = new URL(serverUrl + "/game/" + gameId + "/move");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -20,32 +33,21 @@ public class WebSocketFacade {
             writer.write(requestBody);
             writer.flush();
         }
-
-        handleError(connection);
-
-        // Optional: read the server's response (even if empty) to release resources
-        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
-            reader.read();  // Just consume response to ensure connection resources are released
-        }
     }
 
 
-    public boolean quitGame(int gameId, String authToken) throws Exception {
-        URL url = new URL(serverUrl + "/game/" + gameId + "/quit");
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("DELETE");
-        connection.setRequestProperty("Authorization", authToken);  // Pass authToken in header
+    public boolean leaveGameObserver(int gameId, String authToken) throws Exception {
 
-        try {
-            handleError(connection); // Throws an exception if there's an error response
-            return true; // Return true if no errors were encountered
-        } catch (Exception e) {
-            System.out.println("Failed to quit game: " + e.getMessage());
-            return false; // Return false if an error occurs
-        } finally {
-            connection.disconnect(); // Ensure the connection is closed
-        }
     }
+
+    public boolean leaveGamePlayer(int gameId, String authToken) throws Exception {
+
+    }
+
+    public boolean resignGamePlayer(int gameId, String authToken) throws Exception {
+
+    }
+
 
     public void observeGame(String authToken, int gameId, String perspective) throws Exception {
         // Validate perspective input
@@ -54,7 +56,8 @@ public class WebSocketFacade {
         }
 
         // Fetch the board
-        String board = getBoard(gameId, authToken, perspective);
+
+        String board = serverFacade.getBoard(gameId, authToken, perspective);
 
         System.out.println("Observing Game #" + gameId + " as " + perspective);
         System.out.println(board);
