@@ -14,5 +14,4 @@ public class Notification extends ServerMessage {
     }
 
 
-    // Removed toString() to let Gson handle JSON conversion
 }

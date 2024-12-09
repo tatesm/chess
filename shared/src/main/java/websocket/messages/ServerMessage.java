@@ -2,6 +2,7 @@ package websocket.messages;
 
 import model.GameData;
 
+import java.util.Collection;
 import java.util.Objects;
 
 /**
@@ -111,5 +112,60 @@ public class ServerMessage {
     public int hashCode() {
         return Objects.hash(getServerMessageType());
     }
+
+    public static class LegalMovesMessage extends ServerMessage {
+        private final Collection<String> legalMoves;
+
+        public LegalMovesMessage(Collection<String> legalMoves) {
+            super(ServerMessageType.NOTIFICATION); // Use NOTIFICATION for simplicity, or define a new type
+            this.legalMoves = legalMoves;
+        }
+
+        public Collection<String> getLegalMoves() {
+            return legalMoves;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof LegalMovesMessage)) return false;
+            if (!super.equals(o)) return false;
+            LegalMovesMessage that = (LegalMovesMessage) o;
+            return Objects.equals(getLegalMoves(), that.getLegalMoves());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), getLegalMoves());
+        }
+    }
+
+    public static class ResignationMessage extends ServerMessage {
+        private final String player;
+
+        public ResignationMessage(String player) {
+            super(ServerMessageType.NOTIFICATION);
+            this.player = player;
+        }
+
+        public String getPlayer() {
+            return player;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof ResignationMessage)) return false;
+            if (!super.equals(o)) return false;
+            ResignationMessage that = (ResignationMessage) o;
+            return Objects.equals(getPlayer(), that.getPlayer());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), getPlayer());
+        }
+    }
+
 
 }
