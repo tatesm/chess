@@ -65,7 +65,7 @@ public class MainRunner {
             return;
         }
 
-        GameClient gameClient = new GameClient(serverFacade, scanner, webSocketFacade, gameId, authToken);
+        GameClient gameClient = new GameClient(serverFacade, webSocketFacade, scanner, gameId, authToken);
         String result = gameClient.run();
 
         switch (result) {
