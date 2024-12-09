@@ -81,6 +81,7 @@ public class PostLoginClient {
         return null; // No valid command was processed
     }
 
+
     private void handleError(Exception e) {
         // Unified error handling for unexpected issues
         System.err.println("An error occurred. Please try again.");
