@@ -6,6 +6,7 @@ import chess.ChessPiece;
 import chess.ChessPosition;
 import client.Helper;
 import com.google.gson.Gson;
+import websocket.commands.UserGameCommand;
 
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -89,8 +90,22 @@ public class WebSocketFacade {
     }
 
     public boolean leaveGame(int gameId, String authToken) {
-        //send command to server side websockethandler
+        try {
+            // Construct the message to be sent
+            String message = gson.toJson(new UserGameCommand("LEAVE", authToken, gameId));
+
+            // Send the message via WebSocket
+            webSocket.send(message);
+
+            // Optionally, you can wait for confirmation or acknowledgment from the server
+            // Depending on your implementation, you might have a listener or callback to handle server responses
+            return true; // Indicate the leave command was sent successfully
+        } catch (Exception e) {
+            System.out.println("Failed to send leave game command: " + e.getMessage());
+            return false;
+        }
     }
+
 
     private String pieceToDisplay(ChessPiece piece) {
         String display = "";
