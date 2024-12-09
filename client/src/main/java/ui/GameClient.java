@@ -1,14 +1,14 @@
 package ui;
 
-import websocket.commands.UserGameCommand;
+import client.ServerFacade;
 
 import java.util.Scanner;
 
 public class GameClient {
     private final WebSocketFacade webSocketFacade;
     private final Scanner scanner;
-    private final String authToken;
     private final int gameId;
+    private final String authToken;
 
     public GameClient(WebSocketFacade webSocketFacade, Scanner scanner, int gameId, String authToken) {
         this.webSocketFacade = webSocketFacade;
@@ -17,96 +17,103 @@ public class GameClient {
         this.authToken = authToken;
     }
 
-    public void run() {
+    public String run() {
         while (true) {
-            System.out.print("Enter command (help, redraw, leave, move, resign, highlight): ");
+            System.out.print("Enter command (help, redraw, move, resign, leave): ");
             String command = scanner.nextLine().trim().toLowerCase();
 
-            try {
-                processCommand(command);
-            } catch (Exception e) {
-                System.out.println("An error occurred: " + e.getMessage());
+            switch (command) {
+                case "help" -> displayHelp();
+                case "redraw" -> redrawBoard();
+                case "move" -> makeMove();
+                case "resign" -> {
+                    if (resignGame()) {
+                        return "postlogin"; // Return to post-login after resigning
+                    }
+                }
+                case "leave" -> {
+                    if (leaveGame()) {
+                        return "postlogin"; // Return to post-login after leaving the game
+                    }
+                }
+                case "logout" -> {
+                    return "logout"; // Return to pre-login
+                }
+                case "quit" -> {
+                    return "quit"; // Exit the application
+                }
+                default -> System.out.println("Unknown command. Type 'help' for available commands.");
             }
-        }
-    }
-
-    private void processCommand(String command) throws Exception {
-        switch (command) {
-            case "help" -> displayHelp();
-            case "redraw" -> redrawBoard();
-            case "leave" -> leaveGame();
-            case "move" -> makeMove();
-            case "resign" -> resignGame();
-            case "highlight" -> highlightLegalMoves();
-            default -> System.out.println("Invalid command. Type 'help' to see the list of available commands.");
         }
     }
 
     private void displayHelp() {
         System.out.println("""
                 Available commands:
-                - help: Displays the list of available commands.
-                - redraw: Redraws the current state of the chess board.
-                - leave: Leaves the game and transitions to the post-login UI.
-                - move: Makes a move in the game.
-                - resign: Resigns from the game, forfeiting it.
-                - highlight: Highlights the legal moves for a piece on the board.
+                - help: Displays this help message.
+                - redraw: Redraws the chess board.
+                - move: Make a move in the game.
+                - resign: Resign from the game and return to post-login.
+                - leave: Leave the game and return to post-login.
+                - logout: Logout and return to pre-login.
+                - quit: Quit the application.
                 """);
     }
 
-    private void redrawBoard() throws Exception {
-        webSocketFacade.redrawBoard(gameId, authToken);
-        System.out.println("Board redraw request sent.");
+    private void redrawBoard() {
+        try {
+            webSocketFacade.redrawBoard(gameId, authToken);
+            System.out.println("Board redrawn successfully.");
+        } catch (Exception e) {
+            System.err.println("Failed to redraw board: " + e.getMessage());
+        }
     }
 
-    private void leaveGame() throws Exception {
-        webSocketFacade.leaveGameObserver(gameId, authToken);
-        System.out.println("Leave request sent. Transitioning to post-login UI...");
-    }
-
-    private void makeMove() throws Exception {
+    private void makeMove() {
         System.out.print("Enter your move (e.g., e2e4): ");
         String move = scanner.nextLine().trim();
 
-        if (!isValidMove(move)) {
-            System.out.println("Invalid move format. Please use standard chess notation (e.g., e2e4).");
-            return;
+        try {
+            webSocketFacade.makeMove(gameId, move, authToken);
+            System.out.println("Move executed successfully.");
+        } catch (Exception e) {
+            System.err.println("Failed to make move: " + e.getMessage());
         }
-
-        webSocketFacade.makeMove(gameId, move, authToken);
-        System.out.println("Move request sent: " + move);
     }
 
-    private void resignGame() throws Exception {
+    private boolean resignGame() {
         System.out.print("Are you sure you want to resign? (yes/no): ");
         String confirmation = scanner.nextLine().trim().toLowerCase();
 
         if ("yes".equals(confirmation)) {
-            webSocketFacade.resignGamePlayer(gameId, authToken);
-            System.out.println("You have resigned from the game.");
+            try {
+                webSocketFacade.resignGamePlayer(gameId, authToken);
+                System.out.println("You have resigned from the game.");
+                return true;
+            } catch (Exception e) {
+                System.err.println("Failed to resign: " + e.getMessage());
+            }
         } else {
             System.out.println("Resignation canceled.");
         }
+        return false;
     }
 
-    private void highlightLegalMoves() throws Exception {
-        System.out.print("Enter the position of the piece to highlight (e.g., e2): ");
-        String position = scanner.nextLine().trim();
+    private boolean leaveGame() {
+        System.out.print("Are you sure you want to leave the game? (yes/no): ");
+        String confirmation = scanner.nextLine().trim().toLowerCase();
 
-        if (!isValidPosition(position)) {
-            System.out.println("Invalid position format. Use standard chess notation (e.g., e2).");
-            return;
+        if ("yes".equals(confirmation)) {
+            try {
+                webSocketFacade.leaveGameObserver(gameId, authToken);
+                System.out.println("You have left the game.");
+                return true;
+            } catch (Exception e) {
+                System.err.println("Failed to leave game: " + e.getMessage());
+            }
+        } else {
+            System.out.println("Leave game canceled.");
         }
-
-        webSocketFacade.highlightLegalMoves(gameId, position, authToken);
-        System.out.println("Highlight legal moves request sent for: " + position);
-    }
-
-    private boolean isValidMove(String move) {
-        return move.matches("^[a-h][1-8][a-h][1-8]$");
-    }
-
-    private boolean isValidPosition(String position) {
-        return position.matches("^[a-h][1-8]$");
+        return false;
     }
 }

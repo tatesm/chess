@@ -1,9 +1,6 @@
 package ui;
 
 import client.ServerFacade;
-import ui.GameClient;
-import ui.PostLoginClient;
-import ui.PreLoginClient;
 
 import java.util.Scanner;
 
@@ -65,7 +62,7 @@ public class MainRunner {
             return;
         }
 
-        GameClient gameClient = new GameClient(serverFacade, webSocketFacade, scanner, gameId, authToken);
+        GameClient gameClient = new GameClient(webSocketFacade, scanner, gameId, authToken);
         String result = gameClient.run();
 
         switch (result) {
@@ -82,4 +79,3 @@ public class MainRunner {
         EXIT
     }
 }
-
