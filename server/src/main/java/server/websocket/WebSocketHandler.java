@@ -136,8 +136,14 @@ public class WebSocketHandler {
             boolean isBlackPlayer = username.equals(gameData.getBlackUsername());
 
             if (isWhitePlayer || isBlackPlayer) {
-                // Log that the player left but retain their role
-                System.out.println(username + " left the game but remains the " + (isWhitePlayer ? "white" : "black") + " player.");
+                // Remove the player from the game
+                if (isWhitePlayer) {
+                    gameData.setWhiteUsername(null);
+                    System.out.println(username + " left the game and is no longer the white player.");
+                } else {
+                    gameData.setBlackUsername(null);
+                    System.out.println(username + " left the game and is no longer the black player.");
+                }
             } else {
                 // Handle observer disconnection
                 connections.removeObserver(session);
@@ -149,7 +155,7 @@ public class WebSocketHandler {
 
             // Notify other clients in the game
             String leaveNotification = isWhitePlayer || isBlackPlayer
-                    ? username + " has left the game but remains a player."
+                    ? username + " has left the game."
                     : "An observer has left the game.";
             Notification notification = new Notification(leaveNotification);
             connections.broadcastToGame(gameID, authToken, notification);
