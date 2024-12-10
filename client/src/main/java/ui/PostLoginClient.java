@@ -133,7 +133,7 @@ public class PostLoginClient {
         } catch (Exception e) {
             System.out.println("Failed to join game: " + e.getMessage()); // Display error from the server
         }
-        return false; // Joining game failed
+        return false; // Joining game faile
     }
 
 
