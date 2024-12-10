@@ -157,7 +157,6 @@ public class ServerFacade {
         }
 
         int responseCode = connection.getResponseCode();
-        System.out.println("Response code: " + responseCode);
         if (responseCode >= 400) {
             try (InputStreamReader errorReader = new InputStreamReader(connection.getErrorStream())) {
                 ErrorResponse errorResponse = gson.fromJson(errorReader, ErrorResponse.class);
