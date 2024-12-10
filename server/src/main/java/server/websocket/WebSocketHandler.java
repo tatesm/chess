@@ -1,10 +1,7 @@
 package server.websocket;
 
-import chess.ChessMove;
-import chess.ChessPiece;
-import chess.InvalidMoveException;
+import chess.*;
 import com.google.gson.Gson;
-import chess.ChessGame;
 import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import model.AuthData;
@@ -15,8 +12,11 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import websocket.commands.MakeMove;
 import websocket.messages.Notification;
 import websocket.messages.ServerMessage;
+
+import java.util.List;
 
 @WebSocket
 public class WebSocketHandler {
@@ -37,11 +37,14 @@ public class WebSocketHandler {
         switch (command.getCommandType()) {
             case CONNECT -> connectPlayer(command.getAuthToken(), command.getGameID(), session);
             case MAKE_MOVE -> {
-                ChessMove move = command.getMove(gson, message);
+                MakeMove makeMove = gson.fromJson(message, MakeMove.class);
+                ChessMove move = makeMove.getChessMove();
                 handleMove(command.getAuthToken(), command.getGameID(), move, session);
             }
             case RESIGN -> handleResign(command.getAuthToken(), command.getGameID(), session);
             case LEAVE -> handleLeave(command.getAuthToken(), command.getGameID(), session);
+
+
             default -> System.out.println("Unhandled command type");
         }
     }

@@ -25,6 +25,7 @@ public class GameClient {
         this.chessBoard = new ChessBoard();
 
         try {
+            // Fetch the initial board state from the server
             String initialBoard = webSocketFacade.getBoard(gameId, authToken, "white", chessBoard);
             System.out.println("Initial board state:");
             System.out.println(initialBoard);
@@ -49,6 +50,7 @@ public class GameClient {
             }
         }
     }
+
 
     private boolean processCommand(String command) throws Exception {
         if (command.isBlank()) {

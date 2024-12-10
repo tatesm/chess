@@ -6,14 +6,14 @@ import chess.ChessPiece;
 import chess.ChessPosition;
 import client.Helper;
 import com.google.gson.Gson;
-import model.GameData;
+
 import websocket.commands.UserGameCommand;
 import websocket.messages.ServerMessage;
 
 import javax.websocket.*;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
