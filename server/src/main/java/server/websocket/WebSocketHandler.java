@@ -91,20 +91,36 @@ public class WebSocketHandler {
             // Add connection with game context
             connections.add(authToken, session, gameID);
 
-            // Determine the player's color
+            // Determine the player's color and update the GameData
             String playerColor = authData.username().equals(gameData.getWhiteUsername()) ? "white"
-                    : authData.username().equals(gameData.getBlackUsername()) ? "black" : "observer";
+                    : authData.username().equals(gameData.getBlackUsername()) ? "black" : null;
 
-            // Send a LOAD_GAME message to the root client
+            if (playerColor == null) {
+                if (gameData.getWhiteUsername() == null) {
+                    gameData.setWhiteUsername(authData.username());
+                    playerColor = "white";
+                } else if (gameData.getBlackUsername() == null) {
+                    gameData.setBlackUsername(authData.username());
+                    playerColor = "black";
+                } else {
+                    // If both slots are taken, treat as an observer
+                    playerColor = "observer";
+                }
+            }
+
+            // Persist the updated game data to the database
+            gameDAO.updateGame(gameData);
+
+            // Notify the player of the game load
             ServerMessage.LoadGameMessage loadGameMessage = new ServerMessage.LoadGameMessage(gameData);
             connections.sendToRoot(session, loadGameMessage);
 
-            // Notify other clients in the same game
+            // Notify other players in the game
             String notificationMessage = authData.username() + " joined as " + playerColor;
             Notification notification = new Notification(notificationMessage);
             connections.broadcastToGame(gameID, authToken, notification);
 
-            System.out.println(authData.username() + " connected to game ID: " + gameID);
+            System.out.println(authData.username() + " connected to game ID: " + gameID + " as " + playerColor);
         } catch (Exception e) {
             System.err.println("Error connecting player: " + e.getMessage());
             ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Server error: " + e.getMessage());
@@ -120,30 +136,25 @@ public class WebSocketHandler {
             boolean isBlackPlayer = username.equals(gameData.getBlackUsername());
 
             if (isWhitePlayer || isBlackPlayer) {
-                // Update the game data to remove the player
-                if (isWhitePlayer) {
-                    gameData.setWhiteUsername(null);
-                } else {
-                    gameData.setBlackUsername(null);
-                }
-
-                // Update the game in the database
-                gameDAO.updateGame(gameData);
-
-                // Notify other clients
-                String leaveNotification = username + " has left the game.";
-                Notification notification = new Notification(leaveNotification);
-                connections.broadcastToGame(gameID, authToken, notification);
-
+                // Log that the player left but retain their role
+                System.out.println(username + " left the game but remains the " + (isWhitePlayer ? "white" : "black") + " player.");
             } else {
-                // If the leaving client is an observer
+                // Handle observer disconnection
                 connections.removeObserver(session);
-                String leaveNotification = "An observer has left the game.";
-                Notification notification = new Notification(leaveNotification);
-                connections.broadcastToGame(gameID, authToken, notification);
+                System.out.println("An observer has left the game.");
             }
 
-            // Remove the connection
+            // Persist the updated game state in the database
+            gameDAO.updateGame(gameData);
+
+            // Notify other clients in the game
+            String leaveNotification = isWhitePlayer || isBlackPlayer
+                    ? username + " has left the game but remains a player."
+                    : "An observer has left the game.";
+            Notification notification = new Notification(leaveNotification);
+            connections.broadcastToGame(gameID, authToken, notification);
+
+            // Remove the connection for the leaving client
             connections.remove(authToken, gameID);
         })) {
             return; // Validation failed, exit

@@ -70,12 +70,23 @@ public class MainRunner {
         GameClient gameClient = new GameClient(scanner, webSocketFacade, gameId, authToken);
         String result = gameClient.run();
 
+        if (result == null) {
+            System.err.println("Unexpected state. Returning to post-login.");
+            currentState = AppState.POSTLOGIN;
+            return;
+        }
+
         switch (result) {
-            case "postlogin" -> currentState = AppState.POSTLOGIN;
+            case "postlogin", "leave", "resign" -> currentState = AppState.POSTLOGIN;
             case "logout" -> currentState = AppState.PRELOGIN;
             case "quit" -> currentState = AppState.EXIT;
+            default -> {
+                System.err.println("Unknown result: " + result + ". Returning to post-login.");
+                currentState = AppState.POSTLOGIN;
+            }
         }
     }
+
 
     private enum AppState {
         PRELOGIN,

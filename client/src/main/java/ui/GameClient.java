@@ -41,9 +41,9 @@ public class GameClient {
             String command = scanner.nextLine().trim().toLowerCase();
 
             try {
-                String result = String.valueOf(processCommand(command));
-                if ("quit".equals(result)) {
-                    return "quit"; // Exit the game
+                String result = processCommand(command);
+                if (result != null) {
+                    return result; // Return the appropriate state based on the command
                 }
             } catch (Exception e) {
                 System.out.println("An error occurred: " + e.getMessage());
@@ -52,10 +52,10 @@ public class GameClient {
     }
 
 
-    private boolean processCommand(String command) throws Exception {
+    private String processCommand(String command) throws Exception {
         if (command.isBlank()) {
             System.out.println("Invalid command. Type 'help' for a list of commands.");
-            return true;
+            return null;
         }
 
         switch (command) {
@@ -63,16 +63,18 @@ public class GameClient {
             case "redraw board" -> redrawBoard();
             case "leave" -> {
                 leaveGame();
-                return false; // Exit the loop
+                return "postlogin"; // Signal to return to post-login
             }
             case "make move" -> makeMove();
-            case "resign" -> resignGame();
+            case "resign" -> {
+                resignGame();
+                return "postlogin"; // Signal to return to post-login
+            }
             case "highlight moves" -> highlightLegalMoves();
             default -> System.out.println("Unknown command. Type 'help' for a list of commands.");
         }
-        return true;
+        return null; // Continue loop for other commands
     }
-
 
     private void displayHelp() {
         System.out.println("Available commands:");
