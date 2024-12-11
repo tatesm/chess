@@ -122,11 +122,11 @@ public class WebSocketFacade extends Endpoint {
         if (serverMessage instanceof Notification) {
             Notification notification = (Notification) serverMessage;
             System.out.println("Notification: " + notification.getMessage());
-
         } else {
             System.err.println("Invalid server message type for notification: " + serverMessage.getServerMessageType());
         }
     }
+
 
     private void handleError(ServerMessage serverMessage) {
         if (serverMessage instanceof ServerMessage.ErrorMessage) {
