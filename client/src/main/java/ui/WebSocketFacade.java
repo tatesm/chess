@@ -4,6 +4,7 @@ import chess.*;
 import client.Helper;
 import com.google.gson.Gson;
 
+import model.GameData;
 import websocket.commands.UserGameCommand;
 import websocket.messages.Notification;
 import websocket.messages.ServerMessage;
@@ -63,9 +64,36 @@ public class WebSocketFacade extends Endpoint {
 
 
     private void handleLoadGame(ServerMessage serverMessage) {
-        System.out.println("Game loaded: " + gson.toJson(serverMessage));
-        // Implement game state update logic here
+        try {
+            // Validate the incoming message type
+            if (serverMessage instanceof ServerMessage.LoadGameMessage loadGameMessage) {
+                GameData gameData = loadGameMessage.getGame();
+
+                // Extract the game data and update local state
+                ChessGame chessGame = gameData.getGame(); // The server-side chess game state
+                ChessBoard chessBoard = chessGame.getBoard(); // Extract the board state
+
+                // Update the local game representation
+                System.out.println("Game loaded successfully.");
+                System.out.println("Game Name: " + gameData.getGameName());
+                System.out.println("White Player: " + gameData.getWhiteUsername());
+                System.out.println("Black Player: " + gameData.getBlackUsername());
+                System.out.println("Is Game Over: " + chessGame.isGameOver());
+                System.out.println("Current Turn: " + chessGame.getTeamTurn());
+
+                // Display the board to the user
+                System.out.println("Current Board:");
+                System.out.println(Helper.formatBoard(Helper.convertBoardToDisplay(chessBoard)));
+
+            } else {
+                System.err.println("Unexpected message type for handleLoadGame.");
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to handle load game message: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
+
 
     public String highlightLegalMoves(ChessBoard chessBoard, String selectedSquare) {
         try {
