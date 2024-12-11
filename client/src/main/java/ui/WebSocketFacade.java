@@ -1,27 +1,23 @@
 package ui;
 
-import chess.ChessBoard;
-import chess.ChessGame;
-import chess.ChessPiece;
-import chess.ChessPosition;
+import chess.*;
 import client.Helper;
 import com.google.gson.Gson;
 
 import websocket.commands.UserGameCommand;
+import websocket.messages.Notification;
 import websocket.messages.ServerMessage;
 
 import javax.websocket.*;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collection;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class WebSocketFacade extends Endpoint {
     private final Gson gson = new Gson();
     private final String serverUrl;
     private Session session;
-    private final BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>(); // To handle synchronous responses
 
     public WebSocketFacade(String serverUrl) throws Exception {
         this.serverUrl = serverUrl.replace("http", "ws") + "/ws";
@@ -30,15 +26,6 @@ public class WebSocketFacade extends Endpoint {
 
         // Connect to WebSocket server
         this.session = container.connectToServer(this, uri);
-
-        // Set message handler
-        this.session.addMessageHandler((MessageHandler.Whole<String>) message -> {
-            try {
-                messageQueue.put(message); // Add received messages to the queue
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
     }
 
     @Override
@@ -56,6 +43,102 @@ public class WebSocketFacade extends Endpoint {
         System.err.println("WebSocket error: " + thr.getMessage());
     }
 
+    @OnMessage
+    public void onMessage(String message) {
+        try {
+
+            ServerMessage baseMessage = gson.fromJson(message, ServerMessage.class);
+
+            // Dispatch based on ServerMessageType
+            switch (baseMessage.getServerMessageType()) {
+                case LOAD_GAME -> handleLoadGame(gson.fromJson(message, ServerMessage.LoadGameMessage.class));
+                case ERROR -> handleError(gson.fromJson(message, ServerMessage.ErrorMessage.class));
+                case NOTIFICATION -> handleNotification(gson.fromJson(message, Notification.class));
+                default -> System.err.println("Unhandled message type: " + baseMessage.getServerMessageType());
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to process incoming message: " + e.getMessage());
+        }
+    }
+
+
+    private void handleLoadGame(ServerMessage serverMessage) {
+        System.out.println("Game loaded: " + gson.toJson(serverMessage));
+        // Implement game state update logic here
+    }
+
+    public String highlightLegalMoves(ChessBoard chessBoard, String selectedSquare) {
+        try {
+            ChessPosition position = parseSquare(selectedSquare); // Convert square to ChessPosition
+            ChessPiece piece = chessBoard.getPiece(position);
+
+            if (piece == null) {
+                return "No piece at the selected square.";
+            }
+
+            // Set up a temporary ChessGame instance
+            ChessGame tempGame = new ChessGame();
+            tempGame.setBoard(chessBoard); // Use the provided ChessBoard
+
+            Collection<ChessMove> legalMoves = tempGame.validMoves(position);
+
+            if (legalMoves == null || legalMoves.isEmpty()) {
+                return "No legal moves available for the selected piece.";
+            }
+
+            // Extract end positions for highlighting
+            String[] highlightedMoves = legalMoves.stream()
+                    .map(move -> move.getEndPosition().toString())
+                    .toArray(String[]::new);
+
+            // Highlight the board
+            return Helper.formatBoardWithHighlight(chessBoard, selectedSquare, highlightedMoves);
+        } catch (Exception e) {
+            return "Error highlighting moves: " + e.getMessage();
+        }
+    }
+
+
+    private ChessPosition parseSquare(String selectedSquare) {
+        if (selectedSquare == null || selectedSquare.length() != 2) {
+            throw new IllegalArgumentException("Invalid square format. Must be a letter (a-h) followed by a number (1-8).");
+        }
+
+        char columnChar = selectedSquare.charAt(0);
+        char rowChar = selectedSquare.charAt(1);
+
+        if (columnChar < 'a' || columnChar > 'h' || rowChar < '1' || rowChar > '8') {
+            throw new IllegalArgumentException("Invalid square coordinates. Must be within 'a1' to 'h8'.");
+        }
+
+        int row = rowChar - '1' + 1; // Convert '1'-'8' to 1-8
+        int column = columnChar - 'a' + 1; // Convert 'a'-'h' to 1-8
+
+        return new ChessPosition(row, column);
+    }
+
+
+    private void handleNotification(ServerMessage serverMessage) {
+        if (serverMessage instanceof Notification) {
+            Notification notification = (Notification) serverMessage;
+            System.out.println("Notification: " + notification.getMessage());
+
+        } else {
+            System.err.println("Invalid server message type for notification: " + serverMessage.getServerMessageType());
+        }
+    }
+
+    private void handleError(ServerMessage serverMessage) {
+        if (serverMessage instanceof ServerMessage.ErrorMessage) {
+            ServerMessage.ErrorMessage errorMessage = (ServerMessage.ErrorMessage) serverMessage;
+            System.err.println("Error message received: " + errorMessage.getErrorMessage());
+
+        } else {
+            System.err.println("Invalid server message type for error: " + serverMessage.getServerMessageType());
+        }
+    }
+
+
     public void makeMove(int gameId, String move, String authToken) throws IOException {
         sendCommand(new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, authToken, gameId, move));
         System.out.println("Move command sent successfully.");
@@ -65,43 +148,23 @@ public class WebSocketFacade extends Endpoint {
         try {
             sendCommand(new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameId));
             System.out.println("Leave command sent successfully.");
-            return true; // Indicate success
-        } catch (IOException e) {
-            System.out.println("Failed to send leave game command: " + e.getMessage());
-            return false; // Indicate failure
-        }
-    }
-
-
-    public boolean resignGame(int gameId, String authToken) {
-        try {
-            sendCommand(new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameId));
-            System.out.println("Quit command sent successfully.");
             return true;
         } catch (IOException e) {
-            System.out.println("Failed to send quit game command: " + e.getMessage());
+            System.out.println("Failed to send leave game command: " + e.getMessage());
             return false;
         }
     }
 
-    public String[] highlightLegalMoves(int gameId, String square, String authToken) {
+    public boolean resignGame(int gameId, String authToken) {
         try {
-            // Send LEGAL_MOVES command
-            sendCommand(new UserGameCommand(UserGameCommand.CommandType.LEGAL_MOVES, authToken, gameId, square));
-            System.out.println("Highlight legal moves command sent successfully.");
-
-            // Wait for server response
-            String response = messageQueue.take();
-            ServerMessage.LegalMovesMessage legalMovesMessage = gson.fromJson(response, ServerMessage.LegalMovesMessage.class);
-
-            // Return the array of legal moves
-            return legalMovesMessage.getLegalMoves().toArray(new String[0]);
-        } catch (Exception e) {
-            System.out.println("Failed to retrieve legal moves: " + e.getMessage());
-            return null;
+            sendCommand(new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameId));
+            System.out.println("Resign command sent successfully.");
+            return true;
+        } catch (IOException e) {
+            System.out.println("Failed to send resign game command: " + e.getMessage());
+            return false;
         }
     }
-
 
     private void sendCommand(UserGameCommand command) throws IOException {
         String message = gson.toJson(command);
@@ -117,6 +180,7 @@ public class WebSocketFacade extends Endpoint {
             System.err.println("Error closing WebSocket: " + e.getMessage());
         }
     }
+
 
     public String getBoard(int gameId, String authToken, String playerColor, ChessBoard chessBoard) {
         String[][] boardDisplay = new String[8][8];

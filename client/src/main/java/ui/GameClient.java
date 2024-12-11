@@ -24,14 +24,7 @@ public class GameClient {
         this.authToken = authToken;
         this.chessBoard = new ChessBoard();
 
-        try {
-            // Fetch the initial board state from the server
-            String initialBoard = webSocketFacade.getBoard(gameId, authToken, "white", chessBoard);
-            System.out.println("Initial board state:");
-            System.out.println(initialBoard);
-        } catch (Exception e) {
-            System.out.println("Failed to fetch initial board state: " + e.getMessage());
-        }
+
     }
 
 
@@ -104,10 +97,12 @@ public class GameClient {
         System.out.print("Enter the square of the piece (e.g., e2): ");
         String square = scanner.nextLine().trim().toLowerCase();
 
-        String[] legalMoves = webSocketFacade.highlightLegalMoves(gameId, square, authToken);
-        if (legalMoves != null) {
+        // Use the `highlightLegalMoves` method from `WebSocketFacade` or local logic
+        String highlightedBoard = webSocketFacade.highlightLegalMoves(chessBoard, square);
+
+        if (highlightedBoard != null) {
             System.out.println("Highlighted Board:");
-            System.out.println(Helper.formatBoardWithHighlight(chessBoard, square, legalMoves));
+            System.out.println(highlightedBoard);
         } else {
             System.out.println("No legal moves available or an error occurred.");
         }
