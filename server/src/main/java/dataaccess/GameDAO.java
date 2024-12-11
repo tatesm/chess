@@ -15,18 +15,28 @@ public class GameDAO {
 
     private static final Gson GSON = new Gson();
 
-    public GameData createGame(String gameName, String username, String playerColor) throws DataAccessException {
-        String sql = "INSERT INTO games (game_name, game_state) VALUES (?, NULL)";
+    public GameData createGame(String gameName, String username, String playerColor, ChessGame game) throws DataAccessException {
+        String sql = "INSERT INTO games (game_name, game_state, white_username, black_username) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            stmt.setString(1, gameName);
+            // Convert the game state to JSON
+            String gameStateJson = game != null ? new Gson().toJson(game) : null;
+
+            // Set parameters for the query
+            stmt.setString(1, gameName); // Game name
+            stmt.setString(2, gameStateJson); // Serialized game state
+            stmt.setString(3, playerColor.equals("white") ? username : null); // White player username
+            stmt.setString(4, playerColor.equals("black") ? username : null); // Black player username
+
+            // Execute the statement
             stmt.executeUpdate();
 
+            // Retrieve the generated game ID
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
                     int gameID = rs.getInt(1);
-                    return new GameData(gameID, gameName, new ChessGame());
+                    return new GameData(gameID, gameName, game); // Return a new GameData object
                 }
             }
         } catch (SQLException e) {
@@ -34,6 +44,7 @@ public class GameDAO {
         }
         return null;
     }
+
 
     public GameData getGame(int gameID) throws DataAccessException {
         String sql = "SELECT * FROM games WHERE game_id = ?";
@@ -90,7 +101,7 @@ public class GameDAO {
             throw new DataAccessException("Error clearing games: " + e.getMessage());
         }
     }
-    
+
     public List<GameData> listGames() throws DataAccessException {
         List<GameData> games = new ArrayList<>();
         String sql = "SELECT * FROM games";

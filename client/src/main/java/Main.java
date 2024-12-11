@@ -17,7 +17,7 @@ public class Main {
         var webSocketFacade = new WebSocketFacade(serverUrl);
         var chessBoard = new ChessBoard();
 
-        MainRunner appRunner = new MainRunner(serverFacade, webSocketFacade, scanner);
+        MainRunner appRunner = new MainRunner(serverFacade, webSocketFacade, scanner, serverUrl);
         appRunner.run(); // Delegate the loop to the ApplicationRunner class
 
         System.out.println("Goodbye!");

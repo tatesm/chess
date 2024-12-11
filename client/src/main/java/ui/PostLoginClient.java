@@ -1,6 +1,5 @@
 package ui;
 
-import chess.ChessBoard;
 import client.ServerFacade;
 import model.GameData;
 
@@ -9,238 +8,164 @@ import java.util.Scanner;
 
 public class PostLoginClient {
     private final ServerFacade serverFacade;
-    private final WebSocketFacade webSocketFacade;
+    private WebSocketFacade webSocketFacade;
     private final Scanner scanner;
-    private final String authToken; // The unique authentication token for the logged-in user
-    private int joinedGameId = -1; // Tracks the game the user has joined, if any
+    private final String authToken;
+    private int joinedGameId = -1; // Store the ID of the joined game
+    private final String serverUrl;
 
-    public PostLoginClient(ServerFacade serverFacade, WebSocketFacade webSocketFacade, Scanner scanner, String authToken) {
-        this.serverFacade = serverFacade; // Dependency injection for server communication
+    public PostLoginClient(ServerFacade serverFacade, WebSocketFacade webSocketFacade, Scanner scanner, String authToken, String serverUrl) {
+        this.serverFacade = serverFacade;
         this.webSocketFacade = webSocketFacade;
-        this.scanner = scanner; // User input handler
-        this.authToken = authToken; // Authentication token for API requests
-
-    }
-
-    public String getAuthToken() {
-        return authToken; // Returns the current user's auth token
+        this.scanner = scanner;
+        this.authToken = authToken;
+        this.serverUrl = serverUrl;
     }
 
     public String run() {
-        // Main application loop, processes user commands until an exit condition is met
-        return Base.run(
-                this::getUserCommand,
-                command -> {
-                    try {
-                        return processCommand(command); // Handle the user command
-                    } catch (Exception e) {
-                        throw new RuntimeException(e); // Ensure exceptions don't crash the loop
+        while (true) {
+            System.out.print("Enter command (create game, list games, play game, observe game, logout, help): ");
+            String command = scanner.nextLine().trim().toLowerCase();
+
+            try {
+                switch (command) {
+                    case "create game" -> createGame();
+                    case "list games" -> listGames();
+                    case "play game" -> {
+                        if (playGame()) {
+                            return "play game"; // Switch to in-game context
+                        }
                     }
+                    case "observe game" -> observeGame();
+                    case "logout" -> {
+                        logout();
+                        return "logout";
+                    }
+                    case "help" -> displayHelp();
+                    default -> System.out.println("Invalid command. Type 'help' for a list of commands.");
                 }
-        );
-    }
-
-    private String getUserCommand() {
-        // Prompts the user for their next action
-        System.out.print("Enter command (create game, list games, play game, observe game, logout, help): ");
-        return scanner.nextLine().trim().toLowerCase(); // Normalize input for consistency
-    }
-
-    private String processCommand(String command) throws Exception {
-        // Maps user commands to their respective methods
-        switch (command) {
-            case "create game" -> {
-                createGame();
-                return "create game";
-            }
-            case "list games" -> {
-                listGames();
-                return "list games";
-            }
-            case "play game" -> {
-                if (playGame()) {
-                    return "play game";
-                }
-            }
-            case "observe game" -> {
-                observeGame();
-                return "observe game";
-            }
-            case "logout" -> {
-                logout();
-                return "logout";
-            }
-            case "help" -> {
-                displayHelp();
-                return "help";
-            }
-            default -> {
-                System.out.println("Invalid command. Type 'help' for a list of commands.");
+            } catch (Exception e) {
+                System.out.println("An error occurred: " + e.getMessage());
             }
         }
-        return null; // No valid command was processed
     }
-
-
-    private void handleError(Exception e) {
-        // Unified error handling for unexpected issues
-        System.err.println("An error occurred. Please try again.");
-        e.printStackTrace();
-    }
-
-    public int getJoinedGameId() {
-
-        return joinedGameId; // Retrieve the ID of the currently joined game
-    }
-
-    private boolean playGame() {
-        try {
-            // Fetch the list of games directly from the server
-            List<GameData> gamesList = serverFacade.listGames(authToken);
-            displayGames(gamesList); // Use the helper method
-
-            if (gamesList.isEmpty()) {
-                return false;
-            }
-
-            System.out.print("Enter game number (index as displayed above): ");
-            int gameIndex = Integer.parseInt(scanner.nextLine()); // User inputs game index
-
-            // Validate the game index
-            if (gameIndex < 1 || gameIndex > gamesList.size()) {
-                System.out.println("Invalid game index. Please enter a number between 1 and " + gamesList.size() + ".");
-                return false;
-            }
-
-            // Translate game index to game ID
-            GameData selectedGame = gamesList.get(gameIndex - 1); // Convert 1-based index to 0-based
-            int gameId = selectedGame.getGameID(); // Retrieve the actual game ID from the selected game
-
-            String playerColor = chooseColor(); // User chooses their desired color
-            if (playerColor == null) {
-                System.out.println("Action canceled.");
-                return false; // User opted out
-            }
-
-            // Attempt to join the game
-            serverFacade.joinGame(authToken, gameId, playerColor);
-            System.out.printf("Successfully joined game '%s' as %s.%n", selectedGame.getGameName(), playerColor);
-            joinedGameId = gameId;
-
-            // Connect to the WebSocket for this game
-            webSocketFacade.connectToGame(authToken, gameId);
-
-            return true;
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input. Please enter a valid number.");
-        } catch (Exception e) {
-            System.out.println("Failed to join game: " + e.getMessage()); // Display error from the server
-        }
-        return false; // Joining game failed
-    }
-
 
     private void createGame() {
-        // Handles creating a new game
         try {
             System.out.print("Enter game name: ");
             String gameName = scanner.nextLine().trim();
 
-            serverFacade.createGame(authToken, gameName, null); // Create game without specifying color
+            serverFacade.createGame(authToken, gameName, null);
             System.out.println("Game '" + gameName + "' created successfully.");
         } catch (Exception e) {
-            System.out.println("Failed to create game. Please try again."); // Inform user about the failure
-        }
-    }
-
-    private void displayGames(List<GameData> gamesList) {
-        if (gamesList.isEmpty()) {
-            System.out.println("No games currently available."); // no games to display
-        } else {
-            System.out.println("Available games:");
-            int index = 1;
-            for (GameData game : gamesList) {
-                String white = (game.getWhiteUsername() == null) ? "Empty" : game.getWhiteUsername();
-                String black = (game.getBlackUsername() == null) ? "Empty" : game.getBlackUsername();
-                System.out.printf("%d. Game Name: %s, White: %s, Black: %s%n", index++, game.getGameName(), white, black);
-            }
+            System.out.println("Failed to create game: " + e.getMessage());
         }
     }
 
     private void listGames() {
         try {
-            var gamesList = serverFacade.listGames(authToken); // Fetch the game list from the server
-            displayGames(gamesList); // Use the helper method
+            List<GameData> gamesList = serverFacade.listGames(authToken);
+            displayGames(gamesList);
         } catch (Exception e) {
-            System.out.println("Failed to retrieve game list. Please try again."); // Handle API errors gracefully
+            System.out.println("Failed to retrieve games: " + e.getMessage());
         }
     }
 
+    private boolean playGame() {
+        try {
+            List<GameData> gamesList = serverFacade.listGames(authToken);
+            if (gamesList.isEmpty()) {
+                System.out.println("No games available to join.");
+                return false;
+            }
+
+            displayGames(gamesList);
+            System.out.print("Enter game number to play: ");
+            int gameIndex = Integer.parseInt(scanner.nextLine()) - 1;
+
+            if (gameIndex < 0 || gameIndex >= gamesList.size()) {
+                System.out.println("Invalid game number.");
+                return false;
+            }
+
+            GameData selectedGame = gamesList.get(gameIndex);
+            System.out.print("Choose color (white or black): ");
+            String playerColor = scanner.nextLine().trim().toLowerCase();
+
+            if (!playerColor.equals("white") && !playerColor.equals("black")) {
+                System.out.println("Invalid color choice.");
+                return false;
+            }
+
+            serverFacade.joinGame(authToken, selectedGame.getGameID(), playerColor);
+            System.out.printf("Joined game '%s' as %s.%n", selectedGame.getGameName(), playerColor);
+
+            // Store the game ID and connect to the WebSocket
+            joinedGameId = selectedGame.getGameID();
+
+            webSocketFacade = new WebSocketFacade(serverUrl);
+            webSocketFacade.connectToGame(authToken, joinedGameId);
+            return true; // Successfully joined the game
+        } catch (Exception e) {
+            System.out.println("Failed to join game: " + e.getMessage());
+        }
+        return false;
+    }
 
     private void observeGame() {
         try {
             System.out.print("Enter game number to observe: ");
             int gameId = Integer.parseInt(scanner.nextLine());
 
-            System.out.print("Enter perspective (white or black, default is white): ");
+            System.out.print("Enter perspective (white/black, default is white): ");
             String perspective = scanner.nextLine().trim().toLowerCase();
 
             if (!perspective.equals("white") && !perspective.equals("black")) {
-                perspective = "white"; // Default perspective
+                perspective = "white";
             }
 
-            // Connect to the game via WebSocket for observation
             webSocketFacade.observeGame(authToken, gameId, perspective);
-
-            System.out.println("You are now observing game #" + gameId + " as " + perspective + ".");
-            System.out.println("Real-time updates will be displayed here.");
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid game number. Please enter a valid number."); // Inform user about invalid input
+            System.out.printf("Observing game #%d as %s.%n", gameId, perspective);
         } catch (Exception e) {
-            System.out.println("Failed to retrieve game board. Please try again."); // Handle errors fetching the board
+            System.out.println("Failed to observe game: " + e.getMessage());
         }
     }
-
 
     private void logout() {
-        // Logs the user out and invalidates their session
         try {
-            webSocketFacade.close(); // Close WebSocket connection
-            serverFacade.logout(authToken); // Call server to log out
-            System.out.println("Successfully logged out.");
+            webSocketFacade.close();
+            serverFacade.logout(authToken);
+            System.out.println("Logged out successfully.");
         } catch (Exception e) {
-            System.out.println("Failed to log out. Please try again."); // Notify user if logout fails
+            System.out.println("Failed to log out: " + e.getMessage());
         }
     }
 
-
     private void displayHelp() {
-        // Provides a list of all available commands to the user
         System.out.println("Available commands:");
         System.out.println("- create game: Create a new game");
-        System.out.println("- list games: List all existing games");
-        System.out.println("- play game: Join a game and play");
+        System.out.println("- list games: List all available games");
+        System.out.println("- play game: Join and play a game");
         System.out.println("- observe game: Observe an ongoing game");
         System.out.println("- logout: Log out of your account");
         System.out.println("- help: Display this help message");
     }
 
-    private String chooseColor() {
-        // Allows the user to select a color for their game
-        System.out.print("Choose color (white or black) or type 'cancel' to go back: ");
-        String color = scanner.nextLine().trim().toLowerCase();
-        if (color.equals("white") || color.equals("black")) {
-            return color; // Valid color chosen
-        } else if (color.equals("cancel")) {
-            System.out.println("Canceled color selection."); // User canceled the action
-            return null;
+    private void displayGames(List<GameData> gamesList) {
+        if (gamesList.isEmpty()) {
+            System.out.println("No games available.");
         } else {
-            System.out.println("Invalid color choice. Please choose 'white' or 'black'.");
-            return chooseColor(); // Retry color selection
+            System.out.println("Available games:");
+            int index = 1;
+            for (GameData game : gamesList) {
+                String white = game.getWhiteUsername() == null ? "Empty" : game.getWhiteUsername();
+                String black = game.getBlackUsername() == null ? "Empty" : game.getBlackUsername();
+                System.out.printf("%d. %s (White: %s, Black: %s)%n", index++, game.getGameName(), white, black);
+            }
         }
     }
+
+    public int getJoinedGameId() {
+        return joinedGameId;
+    }
 }
-
-
-
-

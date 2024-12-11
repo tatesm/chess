@@ -6,6 +6,8 @@ import com.google.gson.Gson;
 
 import model.GameData;
 import websocket.commands.UserGameCommand;
+import websocket.messages.ErrorMessage;
+import websocket.messages.LoadGameMessage;
 import websocket.messages.Notification;
 import websocket.messages.ServerMessage;
 
@@ -27,12 +29,32 @@ public class WebSocketFacade extends Endpoint {
 
         // Connect to WebSocket server
         this.session = container.connectToServer(this, uri);
+        this.session.addMessageHandler(new MessageHandler.Whole<String>() {
+            @Override
+            public void onMessage(String message) {
+                try {
+                    ServerMessage serverMessage = gson.fromJson(message, ServerMessage.class);
+
+                    switch (serverMessage.getServerMessageType()) {
+                        case LOAD_GAME -> handleLoadGame(serverMessage);
+                        case ERROR -> handleError(serverMessage);
+                        case NOTIFICATION -> handleNotification(serverMessage);
+                        default ->
+                                System.err.println("Unhandled server message type: " + serverMessage.getServerMessageType());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error processing server message: " + e.getMessage());
+                }
+            }
+        });
     }
 
     @Override
     public void onOpen(Session session, EndpointConfig config) {
         System.out.println("WebSocket connection established.");
+        this.session = session;
     }
+
 
     @Override
     public void onClose(Session session, CloseReason closeReason) {
@@ -44,28 +66,10 @@ public class WebSocketFacade extends Endpoint {
         System.err.println("WebSocket error: " + thr.getMessage());
     }
 
-    @OnMessage
-    public void onMessage(String message) {
-        try {
-
-            ServerMessage baseMessage = gson.fromJson(message, ServerMessage.class);
-
-            // Dispatch based on ServerMessageType
-            switch (baseMessage.getServerMessageType()) {
-                case LOAD_GAME -> handleLoadGame(gson.fromJson(message, ServerMessage.LoadGameMessage.class));
-                case ERROR -> handleError(gson.fromJson(message, ServerMessage.ErrorMessage.class));
-                case NOTIFICATION -> handleNotification(gson.fromJson(message, Notification.class));
-                default -> System.err.println("Unhandled message type: " + baseMessage.getServerMessageType());
-            }
-        } catch (Exception e) {
-            System.err.println("Failed to process incoming message: " + e.getMessage());
-        }
-    }
-
 
     private void handleLoadGame(ServerMessage serverMessage) {
         try {
-            if (serverMessage instanceof ServerMessage.LoadGameMessage loadGameMessage) {
+            if (serverMessage instanceof LoadGameMessage loadGameMessage) {
                 GameData gameData = loadGameMessage.getGame();
                 ChessBoard chessBoard = gameData.getGame().getBoard();
 
@@ -147,8 +151,8 @@ public class WebSocketFacade extends Endpoint {
 
 
     private void handleError(ServerMessage serverMessage) {
-        if (serverMessage instanceof ServerMessage.ErrorMessage) {
-            ServerMessage.ErrorMessage errorMessage = (ServerMessage.ErrorMessage) serverMessage;
+        if (serverMessage instanceof ErrorMessage) {
+            ErrorMessage errorMessage = (ErrorMessage) serverMessage;
             System.err.println("Error message received: " + errorMessage.getErrorMessage());
 
         } else {
@@ -185,9 +189,11 @@ public class WebSocketFacade extends Endpoint {
     }
 
     private void sendCommand(UserGameCommand command) throws IOException {
-        String message = gson.toJson(command);
+        String message = gson.toJson(command); // Ensure `command` has the correct structure
         this.session.getBasicRemote().sendText(message);
+        System.out.println("Sent message: " + message);
     }
+
 
     public void close() {
         try {

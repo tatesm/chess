@@ -13,6 +13,8 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import websocket.commands.MakeMove;
+import websocket.messages.ErrorMessage;
+import websocket.messages.LoadGameMessage;
 import websocket.messages.Notification;
 import websocket.messages.ServerMessage;
 
@@ -34,18 +36,14 @@ public class WebSocketHandler {
     @OnWebSocketMessage
     public void onMessage(Session session, String message) throws DataAccessException {
         var command = gson.fromJson(message, websocket.commands.UserGameCommand.class);
+
         switch (command.getCommandType()) {
             case CONNECT -> connectPlayer(command.getAuthToken(), command.getGameID(), session);
-            case MAKE_MOVE -> {
-                MakeMove makeMove = gson.fromJson(message, MakeMove.class);
-                ChessMove move = makeMove.getChessMove();
-                handleMove(command.getAuthToken(), command.getGameID(), move, session);
-            }
+            case MAKE_MOVE ->
+                    handleMove(command.getAuthToken(), command.getGameID(), gson.fromJson(message, MakeMove.class).getChessMove(), session);
             case RESIGN -> handleResign(command.getAuthToken(), command.getGameID(), session);
             case LEAVE -> handleLeave(command.getAuthToken(), command.getGameID(), session);
-
-
-            default -> System.out.println("Unhandled command type");
+            default -> System.out.println("Unhandled command type: " + command.getCommandType());
         }
     }
 
@@ -75,7 +73,7 @@ public class WebSocketHandler {
             // Handle invalid game ID
             if (gameData == null) {
                 System.out.println("Invalid game ID: " + gameID);
-                ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Invalid game ID.");
+                ErrorMessage errorMessage = new ErrorMessage("Invalid game ID.");
                 connections.sendToRoot(session, errorMessage);
                 return; // Stop further processing
             }
@@ -83,7 +81,7 @@ public class WebSocketHandler {
             // Validate authToken
             if (authData == null || !authToken.equals(authData.authToken())) {
                 System.out.println("Invalid auth token: " + authToken);
-                ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Invalid auth token.");
+                ErrorMessage errorMessage = new ErrorMessage("Invalid auth token.");
                 connections.sendToRoot(session, errorMessage);
                 return;
             }
@@ -112,7 +110,7 @@ public class WebSocketHandler {
             gameDAO.updateGame(gameData);
 
             // Notify the player of the game load
-            ServerMessage.LoadGameMessage loadGameMessage = new ServerMessage.LoadGameMessage(gameData);
+            LoadGameMessage loadGameMessage = new LoadGameMessage(gameData);
             connections.sendToRoot(session, loadGameMessage);
 
             // Notify other players in the game
@@ -123,7 +121,7 @@ public class WebSocketHandler {
             System.out.println(authData.username() + " connected to game ID: " + gameID + " as " + playerColor);
         } catch (Exception e) {
             System.err.println("Error connecting player: " + e.getMessage());
-            ServerMessage.ErrorMessage errorMessage = new ServerMessage.ErrorMessage("Server error: " + e.getMessage());
+            ErrorMessage errorMessage = new ErrorMessage("Server error: " + e.getMessage());
             connections.sendToRoot(session, errorMessage);
         }
     }
@@ -172,7 +170,7 @@ public class WebSocketHandler {
         if (!validateAuthAndGame(authToken, gameID, session, (authData, gameData) -> {
             // Ensure the game is not over
             if (gameData.getGame().isGameOver()) {
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("The game is over. No further moves are allowed."));
+                connections.sendToRoot(session, new ErrorMessage("The game is over. No further moves are allowed."));
                 return;
             }
 
@@ -181,7 +179,7 @@ public class WebSocketHandler {
             boolean isWhitePlayer = username.equals(gameData.getWhiteUsername());
             boolean isBlackPlayer = username.equals(gameData.getBlackUsername());
             if (!isWhitePlayer && !isBlackPlayer) {
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Player not part of the game."));
+                connections.sendToRoot(session, new ErrorMessage("Player not part of the game."));
                 return;
             }
 
@@ -190,7 +188,7 @@ public class WebSocketHandler {
             ChessPiece piece = game.getBoard().getPiece(move.getStartPosition());
             if (piece == null || (isWhitePlayer && piece.getTeamColor() != ChessGame.TeamColor.WHITE) ||
                     (isBlackPlayer && piece.getTeamColor() != ChessGame.TeamColor.BLACK)) {
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("You can only move your own pieces."));
+                connections.sendToRoot(session, new ErrorMessage("You can only move your own pieces."));
                 return;
             }
 
@@ -198,7 +196,7 @@ public class WebSocketHandler {
             try {
                 game.makeMove(move); // Apply the move
             } catch (InvalidMoveException e) {
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid move: " + e.getMessage()));
+                connections.sendToRoot(session, new ErrorMessage("Invalid move: " + e.getMessage()));
                 return;
             }
 
@@ -206,7 +204,7 @@ public class WebSocketHandler {
             gameDAO.updateGame(gameData);
 
             // Broadcast updated game state to all clients
-            ServerMessage.LoadGameMessage loadGameMessage = new ServerMessage.LoadGameMessage(gameData);
+            LoadGameMessage loadGameMessage = new LoadGameMessage(gameData);
             connections.broadcastToGame(gameID, null, loadGameMessage);
 
             // Notify other clients about the move
@@ -225,13 +223,13 @@ public class WebSocketHandler {
     private boolean validateAuthAndGame(String authToken, Integer gameID, Session session, SessionConsumer consumer) throws DataAccessException {
         AuthData authData = authDAO.getAuth(authToken);
         if (authData == null) {
-            connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid auth token."));
+            connections.sendToRoot(session, new ErrorMessage("Invalid auth token."));
             return false;
         }
 
         GameData gameData = gameDAO.getGame(gameID);
         if (gameData == null) {
-            connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid game ID."));
+            connections.sendToRoot(session, new ErrorMessage("Invalid game ID."));
             return false;
         }
 
@@ -251,7 +249,7 @@ public class WebSocketHandler {
             AuthData authData = authDAO.getAuth(authToken);
             if (authData == null) {
                 System.out.println("Invalid auth token: " + authToken);
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid auth token."));
+                connections.sendToRoot(session, new ErrorMessage("Invalid auth token."));
                 return;
             }
 
@@ -259,14 +257,14 @@ public class WebSocketHandler {
             GameData gameData = gameDAO.getGame(gameID);
             if (gameData == null) {
                 System.out.println("Invalid game ID: " + gameID);
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Invalid game ID."));
+                connections.sendToRoot(session, new ErrorMessage("Invalid game ID."));
                 return;
             }
 
             // Ensure the game is not already over
             if (gameData.getGame().isGameOver()) {
                 System.out.println("Attempted to resign after the game is already over.");
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("The game is already over. You cannot resign."));
+                connections.sendToRoot(session, new ErrorMessage("The game is already over. You cannot resign."));
                 return;
             }
 
@@ -274,14 +272,14 @@ public class WebSocketHandler {
             String username = authData.username();
             if (!username.equals(gameData.getWhiteUsername()) && !username.equals(gameData.getBlackUsername())) {
                 System.out.println("Player not part of the game: " + username);
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Player not part of the game."));
+                connections.sendToRoot(session, new ErrorMessage("Player not part of the game."));
                 return;
             }
 
             // Prevent double resignation
             if (gameData.isResigned()) {
                 System.out.println("Double resignation detected for game ID " + gameID);
-                connections.sendToRoot(session, new ServerMessage.ErrorMessage("Resignation already occurred. The game is over."));
+                connections.sendToRoot(session, new ErrorMessage("Resignation already occurred. The game is over."));
                 return;
             }
 
@@ -300,7 +298,7 @@ public class WebSocketHandler {
 
         } catch (Exception e) {
             System.err.println("Error processing resignation: " + e.getMessage());
-            connections.sendToRoot(session, new ServerMessage.ErrorMessage("Server error: " + e.getMessage()));
+            connections.sendToRoot(session, new ErrorMessage("Server error: " + e.getMessage()));
         }
     }
 

@@ -2,9 +2,6 @@ package ui;
 
 import chess.ChessBoard;
 import client.ServerFacade;
-import ui.GameClient;
-import ui.PostLoginClient;
-import ui.PreLoginClient;
 
 import java.util.Scanner;
 
@@ -15,25 +12,33 @@ public class MainRunner {
     private AppState currentState;
     private String authToken;
     private int gameId;
-    private ChessBoard chessBoard;
+    private final String serverUrl;
 
-    public MainRunner(ServerFacade serverFacade, WebSocketFacade webSocketFacade, Scanner scanner) {
+    public MainRunner(ServerFacade serverFacade, WebSocketFacade webSocketFacade, Scanner scanner, String serverUrl) {
         this.serverFacade = serverFacade;
         this.webSocketFacade = webSocketFacade;
         this.scanner = scanner;
         this.currentState = AppState.PRELOGIN;
         this.authToken = null;
         this.gameId = -1;
+        this.serverUrl = serverUrl;
     }
 
     public void run() {
         while (currentState != AppState.EXIT) {
-            switch (currentState) {
-                case PRELOGIN -> handlePreLogin();
-                case POSTLOGIN -> handlePostLogin();
-                case GAME -> handleGame();
+            try {
+                switch (currentState) {
+                    case PRELOGIN -> handlePreLogin();
+                    case POSTLOGIN -> handlePostLogin();
+                    case GAME -> handleGame();
+                }
+            } catch (Exception e) {
+                System.err.println("An error occurred: " + e.getMessage());
+                e.printStackTrace();
+                currentState = AppState.POSTLOGIN; // Recover to post-login
             }
         }
+        System.out.println("Exiting application. Goodbye!");
     }
 
     private void handlePreLogin() {
@@ -42,51 +47,58 @@ public class MainRunner {
 
         if ("quit".equals(result)) {
             currentState = AppState.EXIT;
-        } else {
+        } else if (result != null) {
             authToken = result;
             currentState = AppState.POSTLOGIN;
+        } else {
+            System.err.println("Unexpected result in PreLoginClient. Staying in PRELOGIN.");
         }
     }
 
     private void handlePostLogin() {
-        PostLoginClient postLoginClient = new PostLoginClient(serverFacade, webSocketFacade, scanner, authToken);
+        PostLoginClient postLoginClient = new PostLoginClient(serverFacade, webSocketFacade, scanner, authToken, serverUrl);
         String result = postLoginClient.run();
 
         if ("logout".equals(result)) {
+            authToken = null; // Clear authentication token on logout
             currentState = AppState.PRELOGIN;
         } else if ("play game".equals(result)) {
             gameId = postLoginClient.getJoinedGameId();
-            currentState = AppState.GAME;
+            if (gameId != -1) {
+                currentState = AppState.GAME;
+            } else {
+                System.err.println("No game joined. Staying in POSTLOGIN.");
+            }
+        } else if ("quit".equals(result)) {
+            currentState = AppState.EXIT;
+        } else {
+            System.err.println("Unexpected result in PostLoginClient. Staying in POSTLOGIN.");
         }
     }
 
     private void handleGame() {
         if (gameId == -1 || authToken == null) {
-            System.err.println("Invalid game state. Returning to post-login.");
+            System.err.println("Invalid game state. Returning to POSTLOGIN.");
             currentState = AppState.POSTLOGIN;
             return;
         }
 
-        GameClient gameClient = new GameClient(scanner, webSocketFacade, gameId, authToken);
+        GameClient gameClient = new GameClient(webSocketFacade, gameId, authToken, scanner);
         String result = gameClient.run();
-
-        if (result == null) {
-            System.err.println("Unexpected state. Returning to post-login.");
-            currentState = AppState.POSTLOGIN;
-            return;
-        }
 
         switch (result) {
             case "postlogin", "leave", "resign" -> currentState = AppState.POSTLOGIN;
-            case "logout" -> currentState = AppState.PRELOGIN;
+            case "logout" -> {
+                authToken = null; // Clear authentication token
+                currentState = AppState.PRELOGIN;
+            }
             case "quit" -> currentState = AppState.EXIT;
             default -> {
-                System.err.println("Unknown result: " + result + ". Returning to post-login.");
+                System.err.println("Unknown result: " + result + ". Returning to POSTLOGIN.");
                 currentState = AppState.POSTLOGIN;
             }
         }
     }
-
 
     private enum AppState {
         PRELOGIN,
@@ -95,4 +107,3 @@ public class MainRunner {
         EXIT
     }
 }
-
