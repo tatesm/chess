@@ -78,6 +78,7 @@ public class Server {
         String authToken = req.headers("authorization");
         String playerColor = createGameRequest.getPlayerColor();
 
+        // Validate auth token
         if (isInvalidAuthToken(authToken, res)) {
             return GSON.toJson(new ErrorResponse("Error: Missing authorization token"));
         }
@@ -88,10 +89,13 @@ public class Server {
             return GSON.toJson(new ErrorResponse("Error: Invalid authorization token"));
         }
 
+
+        // Call the GameService to create the game
         GameData gameData = gameService.createGame(gameName, authData.username(), playerColor);
         res.status(200);
         return GSON.toJson(gameData);
     }
+
 
     private Object joinGame(spark.Request req, spark.Response res) {
 
@@ -215,7 +219,7 @@ public class Server {
         if (e.getMessage().contains("Invalid auth token")) { // Error from gameService
             res.status(401);
             res.body(GSON.toJson(new ErrorResponse("Error: Invalid authorization token")));
-        } else if (e.getMessage().contains("Game not found") || e.getMessage().contains("Invalid player color")) {
+        } else if (e.getMessage().contains("Game with ID ") || e.getMessage().contains("Invalid player color")) {
             res.status(400);
         } else if (e.getMessage().contains("already taken")) {
             res.status(403);

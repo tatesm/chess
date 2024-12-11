@@ -16,19 +16,24 @@ public class GameDAO {
     private static final Gson GSON = new Gson();
 
     public GameData createGame(String gameName, String username, String playerColor, ChessGame game) throws DataAccessException {
-        String sql = "INSERT INTO games (game_name, game_state, white_username, black_username) VALUES (?, ?, ?, ?)";
+        // Validate inputs
+        if (gameName == null || gameName.isEmpty()) {
+            throw new DataAccessException("Game name cannot be null or empty");
+        }
+        if (game == null) {
+            throw new DataAccessException("Game cannot be null or empty");
+        }
+
+        String sql = "INSERT INTO games (game_name, game_state) VALUES (?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             // Convert the game state to JSON
-            String gameStateJson = game != null ? new Gson().toJson(game) : null;
+            String gameStateJson = new Gson().toJson(game);
 
             // Set parameters for the query
             stmt.setString(1, gameName); // Game name
             stmt.setString(2, gameStateJson); // Serialized game state
-            stmt.setString(3, playerColor.equals("white") ? username : null); // White player username
-            stmt.setString(4, playerColor.equals("black") ? username : null); // Black player username
-
             // Execute the statement
             stmt.executeUpdate();
 

@@ -38,7 +38,7 @@ public class GSTest {
         authTokenDAO.createAuth(new AuthData(authToken, user.username()));
 
 
-        GameData gameData = gameService.createGame("Test Game", "WHITE", user.username());
+        GameData gameData = gameService.createGame("Test Game", user.username(), "WHITE");
 
 
         assertNotNull(gameData, "GameData should not be null");
@@ -48,7 +48,7 @@ public class GSTest {
     @Test
     public void testJoinGameSuccess() throws DataAccessException {
 
-        GameData gameData = gameService.createGame("Test Game", "WHITE", "testUser");
+        GameData gameData = gameService.createGame("Test Game", "testUser", "WHITE");
 
 
         String authToken = "validAuthToken";
@@ -62,7 +62,7 @@ public class GSTest {
     @Test
     public void testJoinGameWithTakenSlot() throws DataAccessException {
 
-        GameData gameData = gameService.createGame("Test Game", "WHITE", "testUser");
+        GameData gameData = gameService.createGame("Test Game", "testUser", "WHITE");
 
 
         gameService.joinGame("validAuthToken", gameData.getGameID(), "WHITE");
@@ -75,7 +75,7 @@ public class GSTest {
 
     @Test
     public void testJoinGameWithInvalidAuthToken() throws DataAccessException {
-        GameData gameData = gameService.createGame("Test Game", "WHITE", "testUser");
+        GameData gameData = gameService.createGame("Test Game", "testUser", "WHITE");
         assertThrows(DataAccessException.class, () -> {
             gameService.joinGame("invalidAuthToken", gameData.getGameID(), "BLACK");
         }, "Expected DataAccessException for invalid auth token");
@@ -89,8 +89,8 @@ public class GSTest {
 
     @Test
     public void testListGamesWithGames() throws DataAccessException {
-        gameService.createGame("Test Game 1", "WHITE", "testUser1");
-        gameService.createGame("Test Game 2", "BLACK", "testUser2");
+        gameService.createGame("Test Game 1", "testUser1", "WHITE");
+        gameService.createGame("Test Game 2", "testUser2", "BLACK");
 
         List<GameData> games = gameService.listGames();
         assertEquals(2, games.size(), "List should contain two games");
