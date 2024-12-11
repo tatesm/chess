@@ -89,19 +89,16 @@ public class Helper {
     }
 
     public static String[][] convertBoardToDisplay(ChessBoard chessBoard) {
-        String[][] boardDisplay = new String[8][8];
+        String[][] display = new String[8][8];
 
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
-                ChessPosition position = new ChessPosition(row, col);
-                ChessPiece piece = chessBoard.getPiece(position);
-
-                // If there's a piece at the position, display it; otherwise, leave it empty
-                boardDisplay[row - 1][col - 1] = piece != null ? pieceToDisplay(piece) : EscapeSequences.EMPTY;
+                ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
+                display[row - 1][col - 1] = piece != null ? pieceToDisplay(piece) : EscapeSequences.EMPTY;
             }
         }
-
-        return boardDisplay;
+        return display;
     }
+
 
 }

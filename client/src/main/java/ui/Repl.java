@@ -213,6 +213,7 @@ public class Repl {
 
         try {
             serverFacade.joinGame(authToken, gameId, playerColor);
+            webSocketFacade.connectToGame(authToken, gameId); // WebSocket connection
             currentGameId = gameId;
             inGame = true;
             System.out.println("Joined game. Ready to play.");
@@ -220,6 +221,7 @@ public class Repl {
             System.out.println("Game join error: " + e.getMessage());
         }
     }
+
 
     private void observeGame() {
         try {

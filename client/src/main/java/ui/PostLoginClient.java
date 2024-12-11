@@ -127,13 +127,16 @@ public class PostLoginClient {
             System.out.printf("Successfully joined game '%s' as %s.%n", selectedGame.getGameName(), playerColor);
             joinedGameId = gameId;
 
+            // Connect to the WebSocket for this game
+            webSocketFacade.connectToGame(authToken, gameId);
+
             return true;
         } catch (NumberFormatException e) {
             System.out.println("Invalid input. Please enter a valid number.");
         } catch (Exception e) {
             System.out.println("Failed to join game: " + e.getMessage()); // Display error from the server
         }
-        return false; // Joining game faile
+        return false; // Joining game failed
     }
 
 
@@ -175,7 +178,6 @@ public class PostLoginClient {
 
 
     private void observeGame() {
-        // Allows the user to view a game's board without participating
         try {
             System.out.print("Enter game number to observe: ");
             int gameId = Integer.parseInt(scanner.nextLine());
@@ -187,7 +189,11 @@ public class PostLoginClient {
                 perspective = "white"; // Default perspective
             }
 
-            webSocketFacade.observeGame(authToken, gameId, perspective); // Pass the perspective
+            // Connect to the game via WebSocket for observation
+            webSocketFacade.observeGame(authToken, gameId, perspective);
+
+            System.out.println("You are now observing game #" + gameId + " as " + perspective + ".");
+            System.out.println("Real-time updates will be displayed here.");
         } catch (NumberFormatException e) {
             System.out.println("Invalid game number. Please enter a valid number."); // Inform user about invalid input
         } catch (Exception e) {
@@ -199,12 +205,14 @@ public class PostLoginClient {
     private void logout() {
         // Logs the user out and invalidates their session
         try {
+            webSocketFacade.close(); // Close WebSocket connection
             serverFacade.logout(authToken); // Call server to log out
             System.out.println("Successfully logged out.");
         } catch (Exception e) {
             System.out.println("Failed to log out. Please try again."); // Notify user if logout fails
         }
     }
+
 
     private void displayHelp() {
         // Provides a list of all available commands to the user
